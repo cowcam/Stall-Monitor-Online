@@ -1,0 +1,82 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Subscribe to Stall Monitor</title>
+    <style>
+        :root {
+            --text-color: rgb(240, 227, 197);
+            --bg-color: rgb(36, 39, 48);
+            --card-color: rgb(56, 61, 79);
+            --border-color: #4a4f60;
+        }
+        body {
+            margin: 0;
+            padding-top: 80px; /* Add padding to prevent content from hiding under the fixed header */
+            font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
+            background-color: var(--bg-color);
+            color: var(--text-color);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            min-height: calc(100vh - 80px);
+            box-sizing: border-box;
+        }
+        /* --- NEW HEADER STYLES --- */
+        .header {
+            width: 100%;
+            background-color: var(--bg-color);
+            padding: 10px 20px;
+            box-sizing: border-box;
+            display: flex;
+            align-items: center;
+            position: fixed;
+            top: 0;
+            left: 0;
+            z-index: 10;
+            border-bottom: 1px solid var(--border-color);
+        }
+        .header img {
+            height: 50px;
+            margin-right: 15px;
+        }
+        .header h1 {
+            font-size: 1.5em;
+            margin: 0;
+            font-weight: 500;
+        }
+        .container {
+            background-color: var(--card-color);
+            padding: 40px;
+            border-radius: 12px;
+            border: 1px solid var(--border-color);
+            box-shadow: 0 4px 15px rgba(0, 0, 0, 0.2);
+            width: 100%;
+            max-width: 400px;
+            text-align: center;
+        }
+        h2 {
+            margin-top: 0;
+            margin-bottom: 20px;
+            font-weight: 500;
+        }
+        p { line-height: 1.6; opacity: 0.9; }
+        button { width: 100%; padding: 14px; border: none; border-radius: 6px; background-color: var(--text-color); color: var(--bg-color); font-size: 1.1em; font-weight: bold; cursor: pointer; margin-top: 20px; }
+    </style>
+</head>
+<body>
+    <header class="header">
+        <img src="/assets/stallmonitor.png" alt="Stall Monitor Logo">
+        <h1>Stall Monitor</h1>
+    </header>
+
+    <div class="container">
+        <h2>Almost there!</h2>
+        <p>Your account has been created. Click below to activate your Stall Monitor Pro subscription.</p>
+        <form action="/create-checkout-session" method="POST">
+            <button type="submit">Subscribe Now</button>
+        </form>
+    </div>
+</body>
+</html>

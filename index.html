@@ -1,0 +1,329 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Stall Monitor - 24/7 Cow Behaviour Analysis</title>
+    <!-- This line adds the icon to the browser tab -->
+    <link rel="icon" href="/assets/stallmonitor.png" type="image/png">
+    <style>
+        :root {
+            --text-color: rgb(240, 227, 197);
+            --bg-color: rgb(36, 39, 48);
+            --card-color: rgb(56, 61, 79);
+            --border-color: #4a4f60;
+            --success-color: #4CAF50;
+            --error-color: #F44336;
+        }
+
+        body {
+            margin: 0;
+            font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
+            background-color: var(--bg-color);
+            color: var(--text-color);
+            text-align: center;
+        }
+
+        .header {
+            width: 100%;
+            background-color: var(--bg-color);
+            padding: 15px 30px;
+            box-sizing: border-box;
+            display: flex;
+            align-items: center;
+            /* This is the changed property to align header content to the left */
+            justify-content: flex-start;
+            border-bottom: 1px solid var(--border-color);
+        }
+
+        .header img {
+            height: 50px;
+            margin-right: 20px;
+        }
+
+        .header h1 {
+            font-size: 1.8em;
+            margin: 0;
+            font-weight: 500;
+        }
+
+        .main-content {
+            padding: 40px 20px;
+            max-width: 800px;
+            margin: 0 auto;
+        }
+
+        .tagline {
+            font-size: 1.5em;
+            font-weight: 300;
+            color: var(--text-color);
+            opacity: 0.9;
+            margin-bottom: 40px;
+        }
+
+        .video-container {
+            width: 100%;
+            max-width: 800px;
+            margin: 0 auto 40px auto;
+            border-radius: 12px;
+            overflow: hidden;
+            border: 1px solid var(--border-color);
+            box-shadow: 0 8px 25px rgba(0, 0, 0, 0.3);
+        }
+
+        video {
+            width: 100%;
+            display: block;
+        }
+
+        .form-container {
+            background-color: var(--card-color);
+            padding: 30px 40px;
+            border-radius: 12px;
+            border: 1px solid var(--border-color);
+            box-shadow: 0 4px 15px rgba(0, 0, 0, 0.2);
+            width: 100%;
+            max-width: 450px;
+            text-align: center;
+            margin: 0 auto;
+        }
+
+        .tab-buttons {
+            display: flex;
+            border-bottom: 1px solid var(--border-color);
+            margin-bottom: 30px;
+        }
+
+        .tab-button {
+            flex: 1;
+            padding: 15px;
+            border: none;
+            background: none;
+            color: var(--text-color);
+            font-size: 1.1em;
+            cursor: pointer;
+            opacity: 0.6;
+            border-bottom: 3px solid transparent;
+            transition: opacity 0.3s, border-color 0.3s;
+        }
+
+        .tab-button.active {
+            opacity: 1;
+            border-bottom-color: var(--text-color);
+        }
+
+        .form-section {
+            display: none;
+        }
+
+        .form-section.active {
+            display: block;
+        }
+        
+        .form-group { margin-bottom: 20px; text-align: left; }
+        label { display: block; margin-bottom: 8px; font-size: 0.9em; opacity: 0.8; }
+        input { width: 100%; padding: 12px; background-color: var(--bg-color); border: 1px solid var(--border-color); border-radius: 6px; color: var(--text-color); font-size: 1em; box-sizing: border-box; }
+        input:focus { outline: none; border-color: var(--text-color); }
+        button[type="submit"] { width: 100%; padding: 14px; border: none; border-radius: 6px; background-color: var(--text-color); color: var(--bg-color); font-size: 1.1em; font-weight: bold; cursor: pointer; margin-top: 10px; }
+        .message { margin-top: 20px; font-weight: 500; min-height: 1em; }
+        .success { color: var(--success-color); }
+        .error { color: var(--error-color); }
+        .checkbox-group { display: flex; align-items: center; justify-content: flex-start; gap: 10px; margin-top: 15px; }
+
+        /* Modal Styles */
+        .modal-overlay {
+            position: fixed; top: 0; left: 0; right: 0; bottom: 0; background: rgba(0, 0, 0, 0.7);
+            display: none; align-items: center; justify-content: center; z-index: 1000;
+        }
+        .modal-container {
+            background-color: var(--card-color); padding: 40px; border-radius: 12px;
+            border: 1px solid var(--border-color); box-shadow: 0 4px 15px rgba(0, 0, 0, 0.2);
+            width: 100%; max-width: 400px; text-align: center;
+        }
+        .modal-container h2 { margin-top: 0; margin-bottom: 20px; font-weight: 500; }
+        .modal-container p { line-height: 1.6; opacity: 0.9; }
+        .modal-container button { width: 100%; padding: 14px; border: none; border-radius: 6px; background-color: var(--text-color); color: var(--bg-color); font-size: 1.1em; font-weight: bold; cursor: pointer; margin-top: 20px; }
+    </style>
+</head>
+<body>
+
+    <header class="header">
+        <img src="/assets/stallmonitor.png" alt="Stall Monitor Logo">
+        <h1>Stall Monitor</h1>
+    </header>
+
+    <div class="main-content">
+        <h2 class="tagline">24/7 Cow Behaviour Analysis</h2>
+
+        <div class="video-container">
+            <video autoplay muted loop playsinline>
+                <source src="/assets/stall_monitor_demo.mp4" type="video/mp4">
+                Your browser does not support the video tag.
+            </video>
+        </div>
+
+        <div class="form-container">
+            <div class="tab-buttons">
+                <button class="tab-button active" onclick="showForm('login')">Sign In</button>
+                <button class="tab-button" onclick="showForm('register')">Sign Up</button>
+            </div>
+
+            <!-- Login Form -->
+            <div id="login-form-section" class="form-section active">
+                <form id="login-form">
+                    <div class="form-group">
+                        <label for="login-email">Email Address</label>
+                        <input type="email" id="login-email" required>
+                    </div>
+                    <div class="form-group">
+                        <label for="login-password">Password</label>
+                        <input type="password" id="login-password" required>
+                    </div>
+                    <button type="submit">Log In</button>
+                    <p id="login-message" class="message"></p>
+                </form>
+            </div>
+
+            <!-- Registration Form -->
+            <div id="register-form-section" class="form-section">
+                <form id="register-form">
+                    <div class="form-group">
+                        <label for="register-email">Email Address</label>
+                        <input type="email" id="register-email" required>
+                    </div>
+                    <div class="form-group">
+                        <label for="register-password">Password</label>
+                        <input type="password" id="register-password" required>
+                    </div>
+                    <div class="form-group">
+                        <label for="confirm-password">Confirm Password</label>
+                        <input type="password" id="confirm-password" required>
+                    </div>
+                    <div class="checkbox-group">
+                        <input type="checkbox" id="show-password" style="width: auto;">
+                        <label for="show-password" style="margin-bottom: 0;">Show Password</label>
+                    </div>
+                    <button type="submit">Register</button>
+                    <p id="register-message" class="message"></p>
+                </form>
+            </div>
+        </div>
+    </div>
+
+    <!-- Subscription Modal -->
+    <div id="subscription-modal" class="modal-overlay">
+        <div class="modal-container">
+            <h2>Almost there!</h2>
+            <p>Your account has been created. Click below to activate your Stall Monitor Pro subscription.</p>
+            <form action="/create-checkout-session" method="POST">
+                <button type="submit">Subscribe Now</button>
+            </form>
+        </div>
+    </div>
+
+    <script>
+        const loginFormSection = document.getElementById('login-form-section');
+        const registerFormSection = document.getElementById('register-form-section');
+        const tabButtons = document.querySelectorAll('.tab-button');
+
+        function showForm(formName) {
+            if (formName === 'login') {
+                loginFormSection.classList.add('active');
+                registerFormSection.classList.remove('active');
+                tabButtons[0].classList.add('active');
+                tabButtons[1].classList.remove('active');
+            } else {
+                loginFormSection.classList.remove('active');
+                registerFormSection.classList.add('active');
+                tabButtons[0].classList.remove('active');
+                tabButtons[1].classList.add('active');
+            }
+        }
+
+        // --- Login Form Logic ---
+        const loginForm = document.getElementById('login-form');
+        const loginEmailInput = document.getElementById('login-email');
+        const loginPasswordInput = document.getElementById('login-password');
+        const loginMessageArea = document.getElementById('login-message');
+
+        loginForm.addEventListener('submit', async (event) => {
+            event.preventDefault();
+            loginMessageArea.textContent = '';
+            loginMessageArea.className = 'message';
+
+            const formData = new URLSearchParams();
+            formData.append('username', loginEmailInput.value);
+            formData.append('password', loginPasswordInput.value);
+
+            try {
+                const response = await fetch('/token', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/x-www-form-urlencoded' },
+                    body: formData
+                });
+                const data = await response.json();
+                if (response.ok) {
+                    window.location.href = '/dashboard';
+                } else {
+                    loginMessageArea.textContent = data.detail || 'An unknown error occurred.';
+                    loginMessageArea.className = 'message error';
+                }
+            } catch (error) {
+                loginMessageArea.textContent = 'Could not connect to the server.';
+                loginMessageArea.className = 'message error';
+            }
+        });
+
+        // --- Registration Form Logic ---
+        const registerForm = document.getElementById('register-form');
+        const registerEmailInput = document.getElementById('register-email');
+        const registerPasswordInput = document.getElementById('register-password');
+        const confirmPasswordInput = document.getElementById('confirm-password');
+        const showPasswordCheckbox = document.getElementById('show-password');
+        const registerMessageArea = document.getElementById('register-message');
+
+        showPasswordCheckbox.addEventListener('change', () => {
+            const isChecked = showPasswordCheckbox.checked;
+            registerPasswordInput.type = isChecked ? 'text' : 'password';
+            confirmPasswordInput.type = isChecked ? 'text' : 'password';
+        });
+
+        registerForm.addEventListener('submit', async (event) => {
+            event.preventDefault();
+            
+            const email = registerEmailInput.value;
+            const password = registerPasswordInput.value;
+            const confirmPassword = confirmPasswordInput.value;
+
+            registerMessageArea.textContent = '';
+            registerMessageArea.className = 'message';
+
+            if (password !== confirmPassword) {
+                registerMessageArea.textContent = 'Passwords do not match.';
+                registerMessageArea.className = 'message error';
+                return;
+            }
+
+            try {
+                const response = await fetch('/register', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ email: email, password: password })
+                });
+                const data = await response.json();
+                if (response.ok) {
+                    // Show the subscription modal instead of redirecting
+                    document.getElementById('subscription-modal').style.display = 'flex';
+                } else {
+                    registerMessageArea.textContent = data.detail || 'An unknown error occurred.';
+                    registerMessageArea.className = 'message error';
+                }
+            } catch (error) {
+                registerMessageArea.textContent = 'Could not connect to the server.';
+                registerMessageArea.className = 'message error';
+            }
+        });
+    </script>
+</body>
+</html>
+
