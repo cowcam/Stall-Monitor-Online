@@ -156,10 +156,11 @@
         <h2 class="tagline">24/7 Cow Behaviour Analysis</h2>
 
         <div class="video-container">
-            <video autoplay muted loop playsinline>
+            <video id="demo-video" autoplay muted playsinline>
                 <source src="/assets/stall_monitor_demo.mp4" type="video/mp4">
                 Your browser does not support the video tag.
             </video>
+            <img id="video-placeholder" src="/assets/collage2.jpg" alt="Stall Monitor Collage" style="display: none; width: 100%; border-radius: 12px;">
         </div>
 
         <div class="form-container">
@@ -322,6 +323,14 @@
                 registerMessageArea.textContent = 'Could not connect to the server.';
                 registerMessageArea.className = 'message error';
             }
+        });
+
+        const video = document.getElementById('demo-video');
+        const placeholder = document.getElementById('video-placeholder');
+
+        video.addEventListener('ended', () => {
+            video.style.display = 'none';
+            placeholder.style.display = 'block';
         });
     </script>
 </body>
