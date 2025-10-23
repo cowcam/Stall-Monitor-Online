@@ -216,13 +216,14 @@
         <div class="modal-container">
             <h2>Almost there!</h2>
             <p>Your account has been created. Click below to activate your Stall Monitor Pro subscription.</p>
-            <form action="/create-checkout-session" method="POST">
+            <form action="https://my-backend.stallmonitor.workers.dev/create-checkout-session" method="POST">
                 <button type="submit">Subscribe Now</button>
             </form>
         </div>
     </div>
 
     <script>
+        const WORKER_URL = 'https://my-backend.stallmonitor.workers.dev';
         const loginFormSection = document.getElementById('login-form-section');
         const registerFormSection = document.getElementById('register-form-section');
         const tabButtons = document.querySelectorAll('.tab-button');
@@ -257,7 +258,7 @@
             formData.append('password', loginPasswordInput.value);
 
             try {
-                const response = await fetch('/token', {
+                const response = await fetch(`${WORKER_URL}/token`, {
                     method: 'POST',
                     headers: { 'Content-Type': 'application/x-www-form-urlencoded' },
                     body: formData
@@ -306,7 +307,7 @@
             }
 
             try {
-                const response = await fetch('/register', {
+                const response = await fetch(`${WORKER_URL}/register`, {
                     method: 'POST',
                     headers: { 'Content-Type': 'application/json' },
                     body: JSON.stringify({ email: email, password: password })
