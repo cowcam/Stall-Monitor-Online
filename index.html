@@ -312,13 +312,11 @@
                     headers: { 'Content-Type': 'application/json' },
                     body: JSON.stringify({ email: email, password: password })
                 });
-                const data = await response.json();
                 if (response.ok) {
-                    // Show the subscription modal instead of redirecting
-                    document.getElementById('subscription-modal').style.display = 'flex';
+                    alert('Account created successfully!');
                 } else {
-                    registerMessageArea.textContent = data.detail || 'An unknown error occurred.';
-                    registerMessageArea.className = 'message error';
+                    const errorText = await response.text();
+                    alert('Registration Failed: ' + errorText);
                 }
             } catch (error) {
                 registerMessageArea.textContent = 'Could not connect to the server.';
@@ -336,4 +334,3 @@
     </script>
 </body>
 </html>
-
