@@ -306,22 +306,38 @@
                 return;
             }
 
-            try {
-                const response = await fetch(`${WORKER_URL}/register`, {
-                    method: 'POST',
-                    headers: { 'Content-Type': 'application/json' },
-                    body: JSON.stringify({ email: email, password: password })
-                });
-                if (response.ok) {
-                    alert('Account created successfully!');
-                } else {
-                    const errorText = await response.text();
-                    alert('Registration Failed: ' + errorText);
-                }
-            } catch (error) {
-                registerMessageArea.textContent = 'Could not connect to the server.';
-                registerMessageArea.className = 'message error';
-            }
+             try {
+                 const response = await fetch(`${WORKER_URL}/register`, {
+                     method: 'POST',
+                     headers: { 'Content-Type': 'application/json' },
+                     body: JSON.stringify({ email: email, password: password })
+                 });
+
+                 // DO NOT call response.json() or response.text() here
+
+                 if (response.ok) {
+                     // SUCCESS (201 Created)
+                     const successText = await response.text(); // Reads "User account created!"
+                     console.log('Backend response:', successText); // For your records
+                     
+                     // Show the subscription modal
+                     document.getElementById('subscription-modal').style.display = 'flex';
+                     alert('Account created successfully!');
+
+                 } else {
+                     // FAILURE (409 Conflict, etc.)
+                     const errorText = await response.text(); // Reads "This email is already in use."
+                     
+                     registerMessageArea.textContent = errorText || 'An unknown error occurred.';
+                     registerMessageArea.className = 'message error';
+                     alert('Registration Failed: ' + errorText);
+                 }
+             } catch (error) {
+                 // This is for a real network failure (e.g., internet is down)
+                 console.error('Fetch failed:', error);
+                 registerMessageArea.textContent = 'Could not connect to the server.';
+                 registerMessageArea.className = 'message error';
+             }
         });
 
         const video = document.getElementById('demo-video');
