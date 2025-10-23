@@ -3,7 +3,6 @@ export interface Env {
 }
 
 // --- Configuration ---
-// Your frontend's live domain
 const allowedOrigin = 'https://www.stallmonitor.com';
 
 // --- CORS Headers ---
@@ -25,53 +24,55 @@ function bufferToHex(buffer: ArrayBuffer): string {
 }
 
 /**
+ * **NEW:** Converts a hex string (from the DB) back into an ArrayBuffer.
+ */
+function hexToBuffer(hex: string): Uint8Array {
+  const bytes = new Uint8Array(hex.length / 2);
+  for (let i = 0; i < hex.length; i += 2) {
+    bytes[i / 2] = parseInt(hex.substring(i, i + 2), 16);
+  }
+  return bytes;
+}
+
+/**
  * Hashes a password with a salt using SHA-256.
  */
 async function hashPassword(password: string, salt: Uint8Array): Promise<string> {
   const passwordBuffer = new TextEncoder().encode(password);
-  
-  // Create a buffer that is salt + password
   const combinedBuffer = new Uint8Array(salt.length + passwordBuffer.length);
   combinedBuffer.set(salt);
   combinedBuffer.set(passwordBuffer, salt.length);
-
-  // Hash the combined buffer
   const hashBuffer = await crypto.subtle.digest('SHA-256', combinedBuffer);
   return bufferToHex(hashBuffer);
 }
 
 // --- Main Worker Logic ---
-
 export default {
   async fetch(request: Request, env: Env, ctx: ExecutionContext): Promise<Response> {
     const { pathname } = new URL(request.url);
 
-    // --- Handle all OPTIONS preflight requests ---
+    // Handle all OPTIONS preflight requests
     if (request.method === 'OPTIONS') {
       return new Response(null, { headers: corsHeaders });
     }
 
     // --- Handle GET for /api/messages ---
     if (request.method === 'GET' && pathname === '/api/messages') {
+      // (This route is unchanged)
       try {
         const { results } = await env.DB.prepare('SELECT * FROM messages ORDER BY id DESC').all();
         return new Response(JSON.stringify(results), {
           headers: { ...corsHeaders, 'Content-Type': 'application/json' },
         });
       } catch (e) {
-        // This is the catch block for GET /api/messages
-        console.error("--- ERROR IN /api/messages ---");
-        if (e instanceof Error) {
-          console.error("Error Message: " + e.message);
-        } else {
-          console.error("Caught a non-Error value: " + String(e));
-        }
+        console.error("--- ERROR IN /api/messages ---", e instanceof Error ? e.message : String(e));
         return new Response(e instanceof Error ? e.message : String(e), { status: 500, headers: corsHeaders });
       }
     }
 
     // --- Handle POST for /api/messages ---
     if (request.method === 'POST' && pathname === '/api/messages') {
+      // (This route is unchanged)
       try {
         const message = await request.json<{ name: string; body: string }>();
         await env.DB.prepare('INSERT INTO messages (name, body) VALUES (?, ?)')
@@ -79,64 +80,69 @@ export default {
           .run();
         return new Response('Message added!', { status: 201, headers: corsHeaders });
       } catch (e) {
-        // This is the catch block for POST /api/messages
-        console.error("--- ERROR IN POST /api/messages ---");
-        if (e instanceof Error) {
-          console.error("Error Message: " + e.message);
-        } else {
-          console.error("Caught a non-Error value: " + String(e));
-        }
+        console.error("--- ERROR IN POST /api/messages ---", e instanceof Error ? e.message : String(e));
         return new Response(e instanceof Error ? e.message : String(e), { status: 500, headers: corsHeaders });
       }
     }
 
     // --- Handle POST for /register ---
     if (request.method === 'POST' && pathname === '/register') {
+      // (This route is unchanged)
       try {
         const { email, password } = await request.json<{ email: string; password: string }>();
-
         if (!email || !password) {
           return new Response('Email and password are required', { status: 400, headers: corsHeaders });
         }
-        
-        // 1. Generate a new random salt
         const salt = crypto.getRandomValues(new Uint8Array(16));
-        
-        // 2. Hash the password with the salt
         const passwordHash = await hashPassword(password, salt);
-        
-        // 3. Convert salt to hex to store in the DB
         const saltHex = bufferToHex(salt);
-
-        // 4. Store the user with the HASH and SALT
-        await env.DB.prepare(
-          'INSERT INTO users (email, password_hash, salt) VALUES (?, ?, ?)'
-        ).bind(email, passwordHash, saltHex).run();
-          
+        await env.DB.prepare('INSERT INTO users (email, password_hash, salt) VALUES (?, ?, ?)')
+          .bind(email, passwordHash, saltHex).run();
         return new Response('User account created!', { status: 201, headers: corsHeaders });
-        
       } catch (e) {
-        // --- THIS IS THE CORRECT CATCH BLOCK FOR /register ---
-        console.error("--- ERROR IN /register ---");
-        
-        // Safely log the error details
-        let errorMessage = "An unknown error occurred";
-        if (e instanceof Error) {
-          console.error("Error Message: " + e.message);
-          console.error("Error Stack: " + e.stack);
-          errorMessage = e.message;
-        } else {
-          console.error("Caught a non-Error value: " + String(e));
-          errorMessage = String(e);
-        }
-        
-        // Check for the "UNIQUE constraint failed" error
+        let errorMessage = e instanceof Error ? e.message : String(e);
+        console.error("--- ERROR IN /register ---", errorMessage, e instanceof Error ? e.stack : '');
         if (errorMessage.includes('UNIQUE constraint failed: users.email')) {
           return new Response('This email is already in use.', { status: 409, headers: corsHeaders });
         }
-        
-        // General error
         return new Response('Error creating account: ' + errorMessage, { status: 500, headers: corsHeaders });
+      }
+    }
+
+    // --- **NEW:** Handle POST for /login ---
+    if (request.method === 'POST' && pathname === '/login') {
+      try {
+        const { email, password } = await request.json<{ email: string; password: string }>();
+
+        // 1. Find the user
+        const user = await env.DB.prepare('SELECT password_hash, salt FROM users WHERE email = ?')
+          .bind(email)
+          .first<{ password_hash: string; salt: string }>();
+
+        if (!user) {
+          return new Response('Invalid email or password', { status: 401, headers: corsHeaders }); // 401 Unauthorized
+        }
+
+        // 2. Get the stored salt and hash
+        const saltBuffer = hexToBuffer(user.salt);
+        const storedHash = user.password_hash;
+
+        // 3. Re-hash the provided password with the stored salt
+        const providedHash = await hashPassword(password, saltBuffer);
+
+        // 4. Compare!
+        if (providedHash === storedHash) {
+          // SUCCESS!
+          // (In a real app, you'd create and return a JSON Web Token (JWT) here)
+          return new Response('Login successful!', { status: 200, headers: corsHeaders });
+        } else {
+          // FAIL!
+          return new Response('Invalid email or password', { status: 401, headers: corsHeaders });
+        }
+      } catch (e) {
+        let errorMessage = e instanceof Error ? e.message : String(e);
+        console.error("--- ERROR IN /login ---", errorMessage, e instanceof Error ? e.stack : '');
+        return new Response('Error logging in: ' + errorMessage, { status: 500, headers: corsHeaders });
       }
     }
 
