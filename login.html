@@ -88,6 +88,7 @@
                 const data = await response.json();
 
                 if (response.ok) {
+                    localStorage.setItem('stallMonitorUserEmail', email);
                     // On successful login, redirect to the dashboard
                     window.location.href = '/dashboard';
                 } else {
