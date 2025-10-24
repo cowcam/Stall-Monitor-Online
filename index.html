@@ -212,147 +212,166 @@
         <div class="modal-container">
             <h2>Almost there!</h2>
             <p>Your account has been created. Click below to activate your Stall Monitor Pro subscription.</p>
-            <form action="httpsT://my-backend.stallmonitor.workers.dev/create-checkout-session" method="POST">
-                <button type="submit">Subscribe Now</button>
+            <form id="subscribe-form">
+                <button type="submit" id="subscribe-button">Subscribe Now</button>
             </form>
         </div>
     </div>
 
     <script>
-        const WORKER_URL = 'https://my-backend.stallmonitor.workers.dev';
-        const loginFormSection = document.getElementById('login-form-section');
-        const registerFormSection = document.getElementById('register-form-section');
-        const tabButtons = document.querySelectorAll('.tab-button');
+    const WORKER_URL = 'https://my-backend.stallmonitor.workers.dev';
+    const loginFormSection = document.getElementById('login-form-section');
+    const registerFormSection = document.getElementById('register-form-section');
+    const tabButtons = document.querySelectorAll('.tab-button');
 
-        function showForm(formName) {
-            if (formName === 'login') {
-                loginFormSection.classList.add('active');
-                registerFormSection.classList.remove('active');
-                tabButtons[0].classList.add('active');
-                tabButtons[1].classList.remove('active');
-            } else {
-                loginFormSection.classList.remove('active');
-                registerFormSection.classList.add('active');
-                tabButtons[0].classList.remove('active');
-                tabButtons[1].classList.add('active');
-            }
+    // This will store the user's email after they register
+    let registeredEmail = null;
+
+    function showForm(formName) {
+        // (Your showForm function is perfect, no changes needed)
+        if (formName === 'login') {
+            loginFormSection.classList.add('active');
+            registerFormSection.classList.remove('active');
+            tabButtons[0].classList.add('active');
+            tabButtons[1].classList.remove('active');
+        } else {
+            loginFormSection.classList.remove('active');
+            registerFormSection.classList.add('active');
+            tabButtons[0].classList.remove('active');
+            tabButtons[1].classList.add('active');
         }
+    }
 
-        // --- Login Form Logic (CORRECTED) ---
-        const loginForm = document.getElementById('login-form');
-        const loginEmailInput = document.getElementById('login-email');
-        const loginPasswordInput = document.getElementById('login-password');
-        const loginMessageArea = document.getElementById('login-message');
+    // --- Login Form Logic (UPDATED) ---
+    const loginForm = document.getElementById('login-form');
+    const loginEmailInput = document.getElementById('login-email');
+    const loginPasswordInput = document.getElementById('login-password');
+    const loginMessageArea = document.getElementById('login-message');
 
-        loginForm.addEventListener('submit', async (event) => {
-            event.preventDefault();
-            loginMessageArea.textContent = '';
-            loginMessageArea.className = 'message';
+    loginForm.addEventListener('submit', async (event) => {
+        event.preventDefault();
+        loginMessageArea.textContent = 'Logging in...';
+        loginMessageArea.className = 'message';
 
-            const email = loginEmailInput.value;
-            const password = loginPasswordInput.value;
+        const email = loginEmailInput.value;
+        const password = loginPasswordInput.value;
 
-            try {
-                const response = await fetch(`${WORKER_URL}/login`, { // <-- CORRECTED URL
-                    method: 'POST',
-                    headers: { 'Content-Type': 'application/json' }, // <-- CORRECTED HEADER
-                    body: JSON.stringify({ email: email, password: password }) // <-- CORRECTED BODY
-                });
+        try {
+            const response = await fetch(`${WORKER_URL}/login`, {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ email: email, password: password })
+            });
 
-                if (response.ok) {
-                    // SUCCESS (200 OK)
-                    const successText = await response.text();
-                    console.log('Backend response:', successText);
-                    
-                    // Redirect to the dashboard
-                    window.location.href = '/dashboard'; // Assumes you have a /dashboard page
-                
+            const data = await response.json(); // Read the JSON response
+
+            if (response.ok) {
+                // SUCCESS! Backend sent us JSON
+                if (data.farm_name) {
+                    // User has a farm! Go to their dashboard.
+                    window.location.href = `/${data.farm_name}`; // This is Problem 5, we'll fix it
                 } else {
-                    // FAILURE (401 Unauthorized, etc.)
-                    const errorText = await response.text(); // Reads "Invalid email or password"
-                    
-                    loginMessageArea.textContent = errorText || 'An unknown error occurred.';
-                    loginMessageArea.className = 'message error';
+                    // User exists but hasn't paid or created a farm.
+                    window.location.href = '/create-farm';
                 }
-            } catch (error) {
-                // This is for a real network failure
-                console.error('Fetch failed:', error);
-                loginMessageArea.textContent = 'Could not connect to the server.';
+            } else {
+                // FAILURE (e.g., 401 "Invalid email or password")
+                loginMessageArea.textContent = data.error || 'An unknown error occurred.';
                 loginMessageArea.className = 'message error';
             }
-        });
+        } catch (error) {
+            console.error('Fetch failed:', error);
+            loginMessageArea.textContent = 'Could not connect to the server.';
+            loginMessageArea.className = 'message error';
+        }
+    });
 
-        // --- Registration Form Logic (This was already correct) ---
-        const registerForm = document.getElementById('register-form');
-        const registerEmailInput = document.getElementById('register-email');
-        const registerPasswordInput = document.getElementById('register-password');
-        const confirmPasswordInput = document.getElementById('confirm-password');
-        const showPasswordCheckbox = document.getElementById('show-password');
-        const registerMessageArea = document.getElementById('register-message');
+    // --- Registration Form Logic (UPDATED) ---
+    const registerForm = document.getElementById('register-form');
+    const registerEmailInput = document.getElementById('register-email');
+    const registerPasswordInput = document.getElementById('register-password');
+    const confirmPasswordInput = document.getElementById('confirm-password');
+    const showPasswordCheckbox = document.getElementById('show-password');
+    const registerMessageArea = document.getElementById('register-message');
 
-        showPasswordCheckbox.addEventListener('change', () => {
-            const isChecked = showPasswordCheckbox.checked;
-            registerPasswordInput.type = isChecked ? 'text' : 'password';
-            confirmPasswordInput.type = isChecked ? 'text' : 'password';
-        });
+    registerForm.addEventListener('submit', async (event) => {
+        event.preventDefault();
+        const email = registerEmailInput.value;
+        const password = registerPasswordInput.value;
+        const confirmPassword = confirmPasswordInput.value;
 
-        registerForm.addEventListener('submit', async (event) => {
-            event.preventDefault();
-            
-            const email = registerEmailInput.value;
-            const password = registerPasswordInput.value;
-            const confirmPassword = confirmPasswordInput.value;
+        registerMessageArea.textContent = 'Registering...';
+        registerMessageArea.className = 'message';
 
-            registerMessageArea.textContent = '';
-            registerMessageArea.className = 'message';
+        if (password !== confirmPassword) {
+            registerMessageArea.textContent = 'Passwords do not match.';
+            registerMessageArea.className = 'message error';
+            return;
+        }
 
-            if (password !== confirmPassword) {
-                registerMessageArea.textContent = 'Passwords do not match.';
-                registerMessageArea.className = 'message error';
-                return;
-            }
+         try {
+             const response = await fetch(`${WORKER_URL}/register`, {
+                 method: 'POST',
+                 headers: { 'Content-Type': 'application/json' },
+                 body: JSON.stringify({ email: email, password: password })
+             });
 
-             try {
-                 const response = await fetch(`${WORKER_URL}/register`, {
-                     method: 'POST',
-                     headers: { 'Content-Type': 'application/json' },
-                     body: JSON.stringify({ email: email, password: password })
-                 });
+             const data = await response.json(); // Read JSON response
 
-                 // DO NOT call response.json() or response.text() here
-
-                 if (response.ok) {
-                     // SUCCESS (201 Created)
-                     const successText = await response.text(); // Reads "User account created!"
-                     console.log('Backend response:', successText); // For your records
-                     
-                     // Show the subscription modal
-                     document.getElementById('subscription-modal').style.display = 'flex';
-                     // alert('Account created successfully!'); // You can remove this if the modal shows
-
-                 } else {
-                     // FAILURE (409 Conflict, etc.)
-                     const errorText = await response.text(); // Reads "This email is already in use."
-                     
-                     registerMessageArea.textContent = errorText || 'An unknown error occurred.';
-                     registerMessageArea.className = 'message error';
-                     // alert('Registration Failed: ' + errorText); // You can remove this
-                 }
-             } catch (error) {
-                 // This is for a real network failure (e.g., internet is down)
-                 console.error('Fetch failed:', error);
-                 registerMessageArea.textContent = 'Could not connect to the server.';
+             if (response.ok) {
+                 // SUCCESS!
+                 registeredEmail = data.email; // Save the email
+                 document.getElementById('subscription-modal').style.display = 'flex';
+             } else {
+                 // FAILURE (e.g., 409 "Email in use")
+                 registerMessageArea.textContent = data.error || 'An unknown error occurred.';
                  registerMessageArea.className = 'message error';
              }
+         } catch (error) {
+             console.error('Fetch failed:', error);
+             registerMessageArea.textContent = 'Could not connect to the server.';
+             registerMessageArea.className = 'message error';
+         }
+    });
+
+    // --- Subscription Modal Logic (NEW) ---
+    // We're highjacking the form's button to use JS instead
+    const subscribeForm = document.getElementById('subscribe-form'); // Give your modal form an id="subscribe-form"
+    const subscribeButton = document.getElementById('subscribe-button'); // Give your modal button an id="subscribe-button"
+
+    subscribeForm.addEventListener('submit', async (event) => {
+      event.preventDefault(); // Stop the form from redirecting
+      subscribeButton.textContent = "Redirecting to payment...";
+
+      try {
+        const response = await fetch(`${WORKER_URL}/api/create-checkout-session`, {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ email: registeredEmail }) // Send the email we saved
         });
 
-        const video = document.getElementById('demo-video');
-        const placeholder = document.getElementById('video-placeholder');
+        const data = await response.json();
 
-        video.addEventListener('ended', () => {
-            video.style.display = 'none';
-            placeholder.style.display = 'block';
-        });
-    </script>
+        if (response.ok) {
+          // SUCCESS! Redirect to Stripe
+          window.location.href = data.checkoutUrl;
+        } else {
+          alert('Error: ' + data.error);
+          subscribeButton.textContent = "Subscribe Now";
+        }
+      } catch(e) {
+         alert('Could not connect to server.');
+         subscribeButton.textContent = "Subscribe Now";
+      }
+    });
+
+    // --- Video Player Logic (Unchanged) ---
+    const video = document.getElementById('demo-video');
+    const placeholder = document.getElementById('video-placeholder');
+    video.addEventListener('ended', () => {
+        video.style.display = 'none';
+        placeholder.style.display = 'block';
+    });
+</script>
 </body>
 </html>
