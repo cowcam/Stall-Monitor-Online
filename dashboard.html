@@ -1,1 +1,87 @@
-const farmName = window.location.pathname.slice(1);
+    <!doctype html>
+    <html lang="en">
+    <head>
+        <meta charset="utf-8">
+        <meta name="viewport" content="width=device-width, initial-scale=1">
+        <title>Stall Monitor</title>
+        <link rel="icon" href="/assets/stallmonitor.png" type="image/png">
+        <link rel="apple-touch-icon" href="/assets/stallmonitor.png">
+        <link rel="manifest" href="/manifest.json">
+        <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/@mdi/font@7.4.47/css/materialdesignicons.min.css">
+        <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+        <script src="https://cdn.jsdelivr.net/npm/chartjs-plugin-annotation@3.0.1/dist/chartjs-plugin-annotation.min.js"></script>
+        <link rel="stylesheet" href="/web/style.css">
+    </head>
+    <body>
+        <header class="header">
+             <div class="header-title">
+                <img src="##LOGO_PATH##" alt="Logo">
+                <h1>##FARM_NAME##</h1>
+            </div>
+            <div class="status-card" style="display: flex; justify-content: space-between; align-items: center; gap: 20px;">
+                <div>
+                    <h3 style="margin-bottom: 8px; margin-top: 0;">System Status</h3>
+                    <div id="status" style="opacity: 0.8;">Loading...</div>
+                </div>
+                <div style="display: flex; align-items: center; gap: 15px;">
+                    <button id="refreshButton" title="Refresh" class="verify-btn" style="font-size: 24px; padding: 0; color: var(--text-primary); background: transparent; border: none; cursor: pointer;">
+                        <span class="mdi mdi-refresh"></span>
+                    </button>
+                    <button id="soundButton" title="Enable Sound & Notifications" class="verify-btn" style="font-size: 24px; padding: 0; color: var(--text-primary); background: transparent; border: none; cursor: pointer;">
+                        <span class="mdi mdi-bell-off-outline"></span>
+                    </button>
+                </div>
+            </div>
+        </header>
+        <main class="main-container">
+            <div class="card">
+                <h2 id="alerts-title">Recent Alerts</h2>
+                <div id="alerts-grid"></div>
+            </div>
+            <div class="card">
+                <h2>Activity Monitor</h2>
+                <div id="charts"></div>
+            </div>
+        </main>
+
+        <div id="confirmOptionsDialog" class="modal-overlay" style="display: none;">
+            <div class="modal-content">
+                <h3>Confirm Alert</h3>
+                <p>This detection will be marked as correct. How should the image be handled?</p>
+                <div class="modal-buttons" style="flex-direction: column; gap: 10px;">
+                    <button id="confirmTrainBtn" class="modal-btn-confirm">Confirm & Use for Training</button>
+                    <button id="confirmOnlyBtn" class="modal-btn-secondary">Confirm Detection Only (Discard Image)</button>
+                    <button id="adjustBtn" class="modal-btn-secondary">Adjust Annotation First</button>
+                    <button id="cancelConfirmBtn" class="modal-btn-cancel">Cancel</button>
+                </div>
+            </div>
+        </div>
+
+        <div id="rejectDialog" class="modal-overlay" style="display: none;">
+            <div class="modal-content">
+                <h3 id="rejectDialogTitle">Confirm Action</h3>
+                <p id="rejectDialogText">This alert will be processed.</p>
+                <div class="modal-buttons">
+                    <button id="rejectDialogCancel" class="modal-btn-cancel">Cancel</button>
+                    <button id="rejectDialogConfirm" class="modal-btn-confirm">Confirm</button>
+                </div>
+            </div>
+        </div>
+
+        <div id="editorModal" class="modal-overlay" style="display:none; background: rgba(0,0,0,0.9); z-index: 2000;">
+             <div id="editorContainer" style="position: relative; max-width: 95vw; max-height: 90vh;">
+                 <img id="editorImage" draggable="false" style="display: block; max-width: 100%; max-height: 100%; object-fit: contain;">
+                 <canvas id="editorCanvas" style="position: absolute; top: 0; left: 0;"></canvas>
+             </div>
+             <div id="editorControls" style="position: absolute; bottom: 15px; display: flex; gap: 20px;">
+                 <button id="editorCancel" class="modal-btn-cancel">Cancel</button>
+                 <button id="editorSave" class="modal-btn-confirm">Save & Confirm</button>
+             </div>
+        </div>
+
+<script>
+    window.VAPID_PUBLIC_KEY = '##VAPID_PUBLIC_KEY##';
+</script>
+<script src="/web/script.js" defer></script>
+    </body>
+    </html>
