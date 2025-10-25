@@ -1,87 +1,214 @@
-    <!doctype html>
-    <html lang="en">
-    <head>
-        <meta charset="utf-8">
-        <meta name="viewport" content="width=device-width, initial-scale=1">
-        <title>Stall Monitor</title>
-        <link rel="icon" href="/assets/stallmonitor.png" type="image/png">
-        <link rel="apple-touch-icon" href="/assets/stallmonitor.png">
-        <link rel="manifest" href="/manifest.json">
-        <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/@mdi/font@7.4.47/css/materialdesignicons.min.css">
-        <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
-        <script src="https://cdn.jsdelivr.net/npm/chartjs-plugin-annotation@3.0.1/dist/chartjs-plugin-annotation.min.js"></script>
-        <link rel="stylesheet" href="/web/style.css">
-    </head>
-    <body>
-        <header class="header">
-             <div class="header-title">
-                <img src="##LOGO_PATH##" alt="Logo">
-                <h1>##FARM_NAME##</h1>
-            </div>
-            <div class="status-card" style="display: flex; justify-content: space-between; align-items: center; gap: 20px;">
-                <div>
-                    <h3 style="margin-bottom: 8px; margin-top: 0;">System Status</h3>
-                    <div id="status" style="opacity: 0.8;">Loading...</div>
-                </div>
-                <div style="display: flex; align-items: center; gap: 15px;">
-                    <button id="refreshButton" title="Refresh" class="verify-btn" style="font-size: 24px; padding: 0; color: var(--text-primary); background: transparent; border: none; cursor: pointer;">
-                        <span class="mdi mdi-refresh"></span>
-                    </button>
-                    <button id="soundButton" title="Enable Sound & Notifications" class="verify-btn" style="font-size: 24px; padding: 0; color: var(--text-primary); background: transparent; border: none; cursor: pointer;">
-                        <span class="mdi mdi-bell-off-outline"></span>
-                    </button>
-                </div>
-            </div>
-        </header>
-        <main class="main-container">
-            <div class="card">
-                <h2 id="alerts-title">Recent Alerts</h2>
-                <div id="alerts-grid"></div>
-            </div>
-            <div class="card">
-                <h2>Activity Monitor</h2>
-                <div id="charts"></div>
-            </div>
-        </main>
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Your Dashboard - Stall Monitor</title>
+    <link rel="icon" href="/assets/stallmonitor.png" type="image/png">
+    <style>
+        :root {
+            --text-color: rgb(240, 227, 197);
+            --bg-color: rgb(36, 39, 48);
+            --card-color: rgb(56, 61, 79);
+            --border-color: #4a4f60;
+            --success-color: #4CAF50;
+            --error-color: #F44336;
+        }
 
-        <div id="confirmOptionsDialog" class="modal-overlay" style="display: none;">
-            <div class="modal-content">
-                <h3>Confirm Alert</h3>
-                <p>This detection will be marked as correct. How should the image be handled?</p>
-                <div class="modal-buttons" style="flex-direction: column; gap: 10px;">
-                    <button id="confirmTrainBtn" class="modal-btn-confirm">Confirm & Use for Training</button>
-                    <button id="confirmOnlyBtn" class="modal-btn-secondary">Confirm Detection Only (Discard Image)</button>
-                    <button id="adjustBtn" class="modal-btn-secondary">Adjust Annotation First</button>
-                    <button id="cancelConfirmBtn" class="modal-btn-cancel">Cancel</button>
-                </div>
+        body {
+            margin: 0;
+            font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
+            background-color: var(--bg-color);
+            color: var(--text-color);
+            text-align: center;
+        }
+
+        .header {
+            width: 100%;
+            background-color: var(--bg-color);
+            padding: 15px 30px;
+            box-sizing: border-box;
+            display: flex;
+            align-items: center;
+            /* This is the changed property to align header content to the left */
+            justify-content: flex-start;
+            border-bottom: 1px solid var(--border-color);
+        }
+
+        .header img {
+            height: 50px;
+            margin-right: 20px;
+        }
+
+        .header h1 {
+            font-size: 1.8em;
+            margin: 0;
+            font-weight: 500;
+        }
+
+        .main-content {
+            padding: 40px 20px;
+            max-width: 800px;
+            margin: 0 auto;
+        }
+
+        .tagline {
+            font-size: 1.5em;
+            font-weight: 300;
+            color: var(--text-color);
+            opacity: 0.9;
+            margin-bottom: 40px;
+        }
+
+        .video-container {
+            width: 100%;
+            max-width: 800px;
+            margin: 0 auto 40px auto;
+            border-radius: 12px;
+            overflow: hidden;
+            border: 1px solid var(--border-color);
+            box-shadow: 0 8px 25px rgba(0, 0, 0, 0.3);
+        }
+
+        video {
+            width: 100%;
+            display: block;
+        }
+
+        .form-container {
+            background-color: var(--card-color);
+            padding: 30px 40px;
+            border-radius: 12px;
+            border: 1px solid var(--border-color);
+            box-shadow: 0 4px 15px rgba(0, 0, 0, 0.2);
+            width: 100%;
+            max-width: 450px;
+            text-align: center;
+            margin: 0 auto;
+        }
+
+        .tab-buttons {
+            display: flex;
+            border-bottom: 1px solid var(--border-color);
+            margin-bottom: 30px;
+        }
+
+        .tab-button {
+            flex: 1;
+            padding: 15px;
+            border: none;
+            background: none;
+            color: var(--text-color);
+            font-size: 1.1em;
+            cursor: pointer;
+            opacity: 0.6;
+            border-bottom: 3px solid transparent;
+            transition: opacity 0.3s, border-color 0.3s;
+        }
+
+        .tab-button.active {
+            opacity: 1;
+            border-bottom-color: var(--text-color);
+        }
+
+        .form-section {
+            display: none;
+        }
+
+        .form-section.active {
+            display: block;
+        }
+        
+        .form-group { margin-bottom: 20px; text-align: left; }
+        label { display: block; margin-bottom: 8px; font-size: 0.9em; opacity: 0.8; }
+        input { width: 100%; padding: 12px; background-color: var(--bg-color); border: 1px solid var(--border-color); border-radius: 6px; color: var(--text-color); font-size: 1em; box-sizing: border-box; }
+        input:focus { outline: none; border-color: var(--text-color); }
+        button[type="submit"] { width: 100%; padding: 14px; border: none; border-radius: 6px; background-color: var(--text-color); color: var(--bg-color); font-size: 1.1em; font-weight: bold; cursor: pointer; margin-top: 10px; }
+        .message { margin-top: 20px; font-weight: 500; min-height: 1em; }
+        .success { color: var(--success-color); }
+        .error { color: var(--error-color); }
+        .checkbox-group { display: flex; align-items: center; justify-content: flex-start; gap: 10px; margin-top: 15px; }
+
+        /* Modal Styles */
+        .modal-overlay {
+            position: fixed; top: 0; left: 0; right: 0; bottom: 0; background: rgba(0, 0, 0, 0.7);
+            display: none; align-items: center; justify-content: center; z-index: 1000;
+        }
+        .modal-container {
+            background-color: var(--card-color); padding: 40px; border-radius: 12px;
+            border: 1px solid var(--border-color); box-shadow: 0 4px 15px rgba(0, 0, 0, 0.2);
+            width: 100%; max-width: 400px; text-align: center;
+        }
+        .modal-container h2 { margin-top: 0; margin-bottom: 20px; font-weight: 500; }
+        .modal-container p { line-height: 1.6; opacity: 0.9; }
+        .modal-container button { width: 100%; padding: 14px; border: none; border-radius: 6px; background-color: var(--text-color); color: var(--bg-color); font-size: 1.1em; font-weight: bold; cursor: pointer; margin-top: 20px; }
+    </style>
+</head>
+<body>
+    <header class="header">
+        <img src="/assets/stallmonitor.png" alt="Stall Monitor Logo">
+        <h1>Stall Monitor</h1>
+    </header>
+
+    <div class="main-content">
+        <h2 id="dashboard-title">Loading Dashboard...</h2>
+        
+        <div id="farm-data">
             </div>
-        </div>
 
-        <div id="rejectDialog" class="modal-overlay" style="display: none;">
-            <div class="modal-content">
-                <h3 id="rejectDialogTitle">Confirm Action</h3>
-                <p id="rejectDialogText">This alert will be processed.</p>
-                <div class="modal-buttons">
-                    <button id="rejectDialogCancel" class="modal-btn-cancel">Cancel</button>
-                    <button id="rejectDialogConfirm" class="modal-btn-confirm">Confirm</button>
-                </div>
-            </div>
-        </div>
+        <p><a href="/">Back to Home / Log Out</a></p>
+    </div>
 
-        <div id="editorModal" class="modal-overlay" style="display:none; background: rgba(0,0,0,0.9); z-index: 2000;">
-             <div id="editorContainer" style="position: relative; max-width: 95vw; max-height: 90vh;">
-                 <img id="editorImage" draggable="false" style="display: block; max-width: 100%; max-height: 100%; object-fit: contain;">
-                 <canvas id="editorCanvas" style="position: absolute; top: 0; left: 0;"></canvas>
-             </div>
-             <div id="editorControls" style="position: absolute; bottom: 15px; display: flex; gap: 20px;">
-                 <button id="editorCancel" class="modal-btn-cancel">Cancel</button>
-                 <button id="editorSave" class="modal-btn-confirm">Save & Confirm</button>
-             </div>
-        </div>
+    <script>
+        const WORKER_URL = 'https://my-backend.stallmonitor.workers.dev';
 
-<script>
-    window.VAPID_PUBLIC_KEY = '##VAPID_PUBLIC_KEY##';
-</script>
-<script src="/web/script.js" defer></script>
-    </body>
-    </html>
+        document.addEventListener('DOMContentLoaded', () => {
+            // 1. Get the farm name from the URL path
+            const path = window.location.pathname; // e.g., "/my-farm"
+            const farmName = path.slice(1); // Removes the leading "/", result: "my-farm"
+
+            const titleElement = document.getElementById('dashboard-title');
+            const dataElement = document.getElementById('farm-data');
+
+            if (!farmName) {
+                titleElement.textContent = 'Error: Farm name not found in URL.';
+                return;
+            }
+
+            titleElement.textContent = `Dashboard for ${farmName}`;
+
+            // 2. TODO: Fetch farm-specific data from the backend
+            // We need to create a NEW endpoint in my-backend, e.g., GET /api/farm-data?name=...
+            // that returns the alerts/graphs for this specific farm.
+
+            /*
+            async function loadFarmData() {
+                try {
+                    // Example: Replace with your actual backend endpoint
+                    const response = await fetch(`${WORKER_URL}/api/farm-data?name=${encodeURIComponent(farmName)}`);
+                    
+                    if (!response.ok) {
+                        throw new Error(`Failed to load data: ${response.statusText}`);
+                    }
+                    
+                    const data = await response.json();
+                    
+                    // TODO: Use the 'data' to display alerts, charts, etc.
+                    dataElement.textContent = `Welcome! Data for ${farmName} would load here.`;
+                    
+                } catch (error) {
+                    console.error("Error loading farm data:", error);
+                    dataElement.textContent = `Error loading data for ${farmName}.`;
+                }
+            }
+            
+            // loadFarmData(); // Call the function to load data
+            */
+            
+            // For now, just show a placeholder message
+             dataElement.textContent = `Welcome! Data for ${farmName} will load here once the backend API is ready.`;
+
+        });
+    </script>
+</body>
+</html>
