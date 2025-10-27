@@ -321,7 +321,7 @@
              if (response.ok) {
                  // SUCCESS!
                  registeredEmail = data.email; // Save the email
-                 localStorage.setItem('stallMonitorUserEmail', data.email);
+                 localStorage.setItem('stallMonitorUserEmail', data.email); // Save email BEFORE showing modal
                  document.getElementById('subscription-modal').style.display = 'flex';
              } else {
                  // FAILURE (e.g., 409 "Email in use")
