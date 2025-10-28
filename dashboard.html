@@ -163,21 +163,28 @@
         const WORKER_URL = 'https://my-backend.stallmonitor.workers.dev';
 
         document.addEventListener('DOMContentLoaded', () => {
-            // 1. Get the farm name from the URL path (UPDATED)
-            const path = window.location.pathname; // e.g., "/dashboard/my-farm"
-            const parts = path.split('/'); // ["", "dashboard", "my-farm"]
-            
-            // Get the part AFTER "/dashboard/"
-            const farmName = parts.length > 2 ? decodeURIComponent(parts[2]) : null; 
+        // 1. Get the farm name from the URL path (UPDATED)
+        const path = window.location.pathname; // e.g., "/dashboard/my-farm"
 
-            const titleElement = document.getElementById('dashboard-title');
-            const dataElement = document.getElementById('farm-data');
+        // --- ADD DEBUGGING ---
+        console.log("Current Path:", path);
+        const parts = path.split('/'); // ["", "dashboard", "my-farm"]
+        console.log("Path Parts:", parts);
+        // --- END DEBUGGING ---
 
-            if (!farmName) {
-                titleElement.textContent = 'Error: Farm name not found in URL path (/dashboard/YourFarmName).';
-                dataElement.textContent = 'Please log in again.';
-                return;
-            }
+        // Get the part AFTER "/dashboard/"
+        const farmName = parts.length > 2 ? decodeURIComponent(parts[2]) : null;
+        console.log("Extracted Farm Name:", farmName); // <-- ADDED Log
+
+        const titleElement = document.getElementById('dashboard-title');
+        const dataElement = document.getElementById('farm-data');
+
+        if (!farmName) {
+            // This is the error you saw
+            titleElement.textContent = 'Error: Farm name not found in URL path (/dashboard/YourFarmName).';
+            dataElement.textContent = 'Please log in again.';
+            return;
+        }
 
             titleElement.textContent = `Dashboard for ${farmName}`; // This part stays the same
 
