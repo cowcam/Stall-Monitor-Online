@@ -193,7 +193,7 @@
                 if (response.ok) {
                     // SUCCESS!
                     messageArea.textContent = 'Success! Redirecting to your dashboard...';
-                    
+                    localStorage.setItem('stallMonitorFarmName', farmName); // Save the farm name
                     // 4. Redirect to the new dynamic URL
                     window.location.href = `/${farmName}`;
                     
