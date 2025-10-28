@@ -114,6 +114,25 @@
         .form-section {
             display: none;
         }
+        .checkbox-group {
+            display: flex;
+            align-items: center; /* Vertically align items */
+            justify-content: flex-start; /* Align items to the left */
+            gap: 5px; /* Add a small gap between checkbox and label */
+            margin-top: 15px;
+            margin-bottom: 20px; /* Add some space below */
+        }
+        .checkbox-group input[type="checkbox"] {
+            width: auto; /* Let checkbox size itself */
+            margin: 0; /* Remove default margins */
+            flex-shrink: 0; /* Prevent checkbox from shrinking */
+        }
+        .checkbox-group label {
+            margin-bottom: 0; /* Remove bottom margin from label */
+            white-space: nowrap; /* Prevent label text from wrapping */
+            flex-grow: 1; /* Allow label to take remaining space if needed */
+            text-align: left; /* Ensure label text is left-aligned */
+        }
 
         .form-section.active {
             display: block;
