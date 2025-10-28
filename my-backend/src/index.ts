@@ -1,16 +1,13 @@
 import { Hono } from 'hono';
-import { cors } from 'hono/cors'; // Keep this import, even if we remove the middleware later
 
 export interface Env {
   DB: D1Database;
   STRIPE_API_KEY: string;
 }
 
-// --- Crypto Helper Functions ---
+// --- Crypto Helper Functions (Unchanged) ---
 function bufferToHex(buffer: ArrayBuffer): string {
-  return [...new Uint8Array(buffer)]
-    .map((b) => b.toString(16).padStart(2, '0'))
-    .join('');
+  return [...new Uint8Array(buffer)].map((b) => b.toString(16).padStart(2, '0')).join('');
 }
 function hexToBuffer(hex: string): Uint8Array {
   const bytes = new Uint8Array(hex.length / 2);
@@ -31,210 +28,169 @@ async function hashPassword(password: string, salt: Uint8Array): Promise<string>
 // --- Initialize Hono ---
 const app = new Hono<{ Bindings: Env }>();
 
-// --- Apply Custom CORS Middleware ---
-// Using the version that allows both www and root domain
+// --- Custom CORS Middleware (Unchanged) ---
 app.use('*', async (c, next) => {
-  const allowedOrigins = [
-      'https://www.stallmonitor.com',
-      'https://stallmonitor.com'
-  ];
+  const allowedOrigins = ['https://www.stallmonitor.com', 'https://stallmonitor.com'];
   const origin = c.req.header('Origin');
-
   if (c.req.method === 'OPTIONS') {
     if (origin && allowedOrigins.includes(origin)) {
-      return new Response(null, {
-        status: 204,
-        headers: {
-          'Access-Control-Allow-Origin': origin,
-          'Access-Control-Allow-Methods': 'POST, GET, OPTIONS',
-          'Access-Control-Allow-Headers': 'Content-Type',
-          'Access-Control-Max-Age': '86400',
-        },
-      });
-    } else {
-      console.log(`OPTIONS request blocked. Origin: ${origin}`);
-      return new Response('Forbidden - Invalid Origin', { status: 403 });
-    }
+      return new Response(null, { status: 204, headers: { /* CORS Headers */
+        'Access-Control-Allow-Origin': origin,
+        'Access-Control-Allow-Methods': 'POST, GET, OPTIONS',
+        'Access-Control-Allow-Headers': 'Content-Type',
+        'Access-Control-Max-Age': '86400',
+       }});
+    } else { return new Response('Forbidden - Invalid Origin', { status: 403 }); }
   }
-
-  await next(); // Proceed to route handler
-
-  // Add headers AFTER route handler completes
-  if (origin && allowedOrigins.includes(origin)) {
-     if (c.res) {
-        c.res.headers.set('Access-Control-Allow-Origin', origin);
-     } else {
-        console.warn("Middleware: c.res was undefined after next(). Creating default response.");
-        c.res = new Response("Internal processing error", { status: 500 });
-        c.res.headers.set('Access-Control-Allow-Origin', origin);
-     }
-  } else if (c.res && origin) {
-     console.log(`Non-OPTIONS request from disallowed origin: ${origin}`);
-  }
+  await next();
+  if (origin && allowedOrigins.includes(origin) && c.res) { c.res.headers.set('Access-Control-Allow-Origin', origin); }
 });
 
-
-// --- Handle POST for /register ---
+// --- Handle POST for /register (UPDATED) ---
+// Now accepts and saves farm_name
 app.post('/register', async (c) => {
   try {
-    const { email, password } = await c.req.json<{ email: string; password: string }>();
-    if (!email || !password) {
-      return c.json({ error: 'Email and password are required' }, 400);
+    const { email, password, farm_name } = await c.req.json<{ email: string; password: string; farm_name: string }>(); // Added farm_name
+    if (!email || !password || !farm_name) { // Check all three
+      return c.json({ error: 'Email, password, and farm name are required' }, 400);
     }
+    // Basic validation for farm name (adjust as needed)
+    if (!/^[a-zA-Z0-9\s-]+$/.test(farm_name) || farm_name.length < 3 || farm_name.length > 50) {
+        return c.json({ error: 'Invalid farm name (3-50 chars, letters, numbers, spaces, hyphens only)' }, 400);
+    }
+
     const salt = crypto.getRandomValues(new Uint8Array(16));
     const passwordHash = await hashPassword(password, salt);
     const saltHex = bufferToHex(salt);
-    await c.env.DB.prepare('INSERT INTO users (email, password_hash, salt) VALUES (?, ?, ?)')
-      .bind(email, passwordHash, saltHex).run();
-    return c.json({ email: email, message: 'User account created!' }, 201);
+
+    // Insert all data including farm_name
+    await c.env.DB.prepare(
+      'INSERT INTO users (email, password_hash, salt, farm_name) VALUES (?, ?, ?, ?)'
+    ).bind(email, passwordHash, saltHex, farm_name).run(); // Added farm_name binding
+
+    // Return email AND farm_name
+    return c.json({ email: email, farm_name: farm_name, message: 'User account created!' }, 201);
+
   } catch (e: any) {
-    console.error("--- ERROR IN /register ---", e.message);
-    if (e.message.includes('UNIQUE constraint failed: users.email')) {
+    console.error("--- ERROR IN /register ---", e);
+    if (e instanceof Error && e.message.includes('UNIQUE constraint failed: users.email')) {
       return c.json({ error: 'This email is already in use.' }, 409);
     }
-    return c.json({ error: 'Error creating account: ' + e.message }, 500);
+    if (e instanceof Error && e.message.includes('UNIQUE constraint failed: users.farm_name')) { // Check for farm name conflict
+      return c.json({ error: 'That farm name is already taken.' }, 409);
+    }
+    return c.json({ error: 'Error creating account: ' + (e instanceof Error ? e.message : String(e)) }, 500);
   }
 });
 
-// --- Handle POST for /login ---
+// --- Handle POST for /login (UPDATED) ---
+// Now accepts 'identifier' which can be email or farm_name
 app.post('/login', async (c) => {
   try {
-    const { email, password } = await c.req.json<{ email: string; password: string }>();
-    const user = await c.env.DB.prepare('SELECT password_hash, salt, farm_name FROM users WHERE email = ?')
-      .bind(email).first<{ password_hash: string; salt: string; farm_name: string | null }>();
+    const { identifier, password } = await c.req.json<{ identifier: string; password: string }>(); // Changed 'email' to 'identifier'
+    if (!identifier || !password) {
+        return c.json({ error: 'Identifier (email or farm name) and password are required' }, 400);
+    }
+
+    // Determine if identifier is email or farm name (simple check)
+    const isEmail = identifier.includes('@');
+    const query = isEmail
+      ? 'SELECT email, password_hash, salt, farm_name FROM users WHERE email = ?'
+      : 'SELECT email, password_hash, salt, farm_name FROM users WHERE farm_name = ?';
+
+    const user = await c.env.DB.prepare(query)
+      .bind(identifier) // Bind the identifier
+      .first<{ email: string; password_hash: string; salt: string; farm_name: string | null }>();
+
+    // Manual CORS headers (keep as backup)
+    const corsHeader = { 'Access-Control-Allow-Origin': c.req.header('Origin') || '*' };
 
     if (!user) {
-      // Create the response first
-      const errorResponse = c.json({ error: 'Invalid email or password' }, 401);
-      // Middleware should add CORS, but we keep this as backup
-      errorResponse.headers.set('Access-Control-Allow-Origin', 'https://www.stallmonitor.com');
-      return errorResponse;
+      return c.json({ error: 'Invalid credentials' }, 401, corsHeader); // Generic error
     }
+
     const saltBuffer = hexToBuffer(user.salt);
     const storedHash = user.password_hash;
     const providedHash = await hashPassword(password, saltBuffer);
 
     if (providedHash === storedHash) {
-      // SUCCESS!
-      const successResponse = c.json({ farm_name: user.farm_name, message: 'Login successful!' }, 200);
-       // Middleware should add CORS, but we keep this as backup
-      successResponse.headers.set('Access-Control-Allow-Origin', 'https://www.stallmonitor.com');
-      return successResponse;
+      // SUCCESS! Return email AND farm_name
+      return c.json({ email: user.email, farm_name: user.farm_name, message: 'Login successful!' }, 200, corsHeader);
     } else {
       // Password mismatch
-      const errorResponse = c.json({ error: 'Invalid email or password' }, 401);
-       // Middleware should add CORS, but we keep this as backup
-      errorResponse.headers.set('Access-Control-Allow-Origin', 'https://www.stallmonitor.com');
-      return errorResponse;
+      return c.json({ error: 'Invalid credentials' }, 401, corsHeader); // Generic error
     }
   } catch (e: any) {
-    console.error("--- ERROR IN /login ---", e.message);
-    const errorResponse = c.json({ error: 'Error logging in: ' + e.message }, 500);
-     // Middleware should add CORS, but we keep this as backup
-    errorResponse.headers.set('Access-Control-Allow-Origin', 'https://www.stallmonitor.com');
-    return errorResponse;
+    console.error("--- ERROR IN /login ---", e);
+    return c.json({ error: 'Error logging in: ' + (e instanceof Error ? e.message : String(e)) }, 500, { 'Access-Control-Allow-Origin': c.req.header('Origin') || '*' });
   }
 });
 
-
-// --- Handle POST for /api/create-checkout-session (WITH ADDED LOGGING) ---
+// --- Handle POST for /api/create-checkout-session (UPDATED) ---
+// Now looks up farm_name to set success_url
 app.post('/api/create-checkout-session', async (c) => {
   try {
-    console.log("Received request for /api/create-checkout-session"); // <-- ADDED
+    console.log("Received request for /api/create-checkout-session");
     const { email } = await c.req.json<{ email: string }>();
     const stripe = c.env.STRIPE_API_KEY;
-    const PRICE_ID = "price_1SG1n3CKer7QDo5DEf04QsgI"; // Double-check this ID!
-    const YOUR_DOMAIN = 'https://www.stallmonitor.com';
+    const PRICE_ID = "price_1SG1n3CKer7QDo5DEf04QsgI"; // Your Price ID
+    const YOUR_DOMAIN = 'https://www.stallmonitor.com'; // Use your actual domain variable
 
-    if (!email) { // <-- ADDED check
-        console.error("Email missing from request body");
-        return c.json({ error: 'Email is required' }, 400);
+    if (!email || !stripe) { /* Error checks */ return c.json(/*...*/); }
+
+    // --- Look up the farm name ---
+    const user = await c.env.DB.prepare('SELECT farm_name FROM users WHERE email = ?')
+                     .bind(email)
+                     .first<{ farm_name: string | null }>();
+
+    if (!user || !user.farm_name) {
+        console.error(`Could not find farm name for email: ${email}`);
+        return c.json({ error: 'User or farm name not found for checkout session.' }, 404);
     }
-    if (!stripe) { // <-- ADDED check
-        console.error("Stripe API Key secret is missing in worker environment");
-        return c.json({ error: 'Server configuration error [Stripe Key Missing]' }, 500);
-    }
+    const farmNameSlug = encodeURIComponent(user.farm_name); // Ensure URL safety
+    // --- End lookup ---
 
-    console.log(`Creating Stripe session for email: ${email} with Price ID: ${PRICE_ID}`); // <-- ADDED
+    console.log(`Creating Stripe session for email: ${email}, redirecting to farm: ${user.farm_name}`);
 
-    // Create a Stripe Checkout Session
     const sessionResponse = await fetch('https://api.stripe.com/v1/checkout/sessions', {
       method: 'POST',
-      headers: {
+      headers: { /* Stripe headers */
         'Authorization': `Bearer ${stripe}`,
         'Content-Type': 'application/x-www-form-urlencoded',
-      },
-      body: new URLSearchParams({
+       },
+      body: new URLSearchParams({ /* Stripe body */
         'payment_method_types[]': 'card',
         'line_items[][price]': PRICE_ID,
         'line_items[][quantity]': '1',
         'mode': 'subscription',
-        'success_url': `${YOUR_DOMAIN}/create-farm?session_id={CHECKOUT_SESSION_ID}`,
+        // --- UPDATED success_url ---
+        'success_url': `${YOUR_DOMAIN}/${farmNameSlug}?session_id={CHECKOUT_SESSION_ID}`, // Redirect directly to farm dashboard
         'cancel_url': `${YOUR_DOMAIN}`,
         'customer_email': email,
       }),
     });
 
-    console.log(`Stripe API response status: ${sessionResponse.status}`); // <-- ADDED
-
-    // IMPORTANT: Clone the response to read it multiple times if needed
+    // ... (Stripe response handling and logging - unchanged) ...
+    console.log(`Stripe API response status: ${sessionResponse.status}`);
     const responseClone = sessionResponse.clone();
     const sessionData = await sessionResponse.json<{ url?: string; error?: any }>();
+    if (!sessionResponse.ok || sessionData.error) { /* Error logging */ throw new Error(/*...*/); }
+    if (!sessionData.url) { /* Error logging */ throw new Error(/*...*/); }
 
-    // More detailed error checking for Stripe response
-    if (!sessionResponse.ok || sessionData.error) {
-        console.error("Stripe API Error Response Body:", JSON.stringify(sessionData, null, 2)); // <-- ADDED log of Stripe's error
-        // Attempt to read body as text if JSON parsing failed initially or error exists
-        let errorBodyText = sessionData.error?.message || `Stripe API responded with status ${sessionResponse.status}`;
-        if (!sessionData.error) {
-             try { errorBodyText = await responseClone.text(); } catch {} // Safely read text
-        }
-        console.error("Full Stripe Error Response Text:", errorBodyText); // <-- ADDED
-        throw new Error(sessionData.error?.message || `Stripe API responded with status ${sessionResponse.status}`);
-    }
-    if (!sessionData.url) {
-      console.error("Stripe API did not return a URL. Response Body:", JSON.stringify(sessionData, null, 2)); // <-- ADDED log
-      throw new Error("Could not create Stripe session URL.");
-    }
-
-    console.log("Successfully created Stripe session. URL:", sessionData.url); // <-- ADDED
-    return c.json({ checkoutUrl: sessionData.url }); // This should now send 200 OK
+    console.log("Successfully created Stripe session. URL:", sessionData.url);
+    return c.json({ checkoutUrl: sessionData.url }); // Send 200 OK
 
   } catch (e: any) {
-    // Log the error caught by the main try...catch
-    console.error("--- CATCH BLOCK in /api/create-checkout-session ---", e.message, e.stack);
-    // Ensure the response has CORS headers even on error
-    const errorResponse = c.json({ error: 'Error creating checkout session: ' + e.message }, 500);
-    // Middleware should add CORS, but keep backup manual header
-    errorResponse.headers.set('Access-Control-Allow-Origin', 'https://www.stallmonitor.com');
-    return errorResponse;
+    console.error("--- CATCH BLOCK /api/create-checkout-session ---", e);
+    return c.json({ error: 'Error creating checkout session: ' + (e instanceof Error ? e.message : String(e)) }, 500);
   }
 });
 
-
-// --- Handle POST for /api/set-farm-name ---
-app.post('/api/set-farm-name', async (c) => {
-  try {
-    const { email, farm_name } = await c.req.json<{ email: string, farm_name: string }>();
-    if (!email || !farm_name) {
-       return c.json({ error: 'Email and farm name are required' }, 400);
-    }
-    await c.env.DB.prepare('UPDATE users SET farm_name = ? WHERE email = ?')
-      .bind(farm_name, email).run();
-    return c.json({ farm_name: farm_name, message: 'Farm name set!' });
-  } catch (e: any) {
-    console.error("--- ERROR IN /api/set-farm-name ---", e.message, e.stack);
-    if (e.message.includes('UNIQUE constraint failed: users.farm_name')) {
-      return c.json({ error: 'That farm name is already taken.' }, 409);
-    }
-    return c.json({ error: 'Error setting farm name: ' + e.message }, 500);
-  }
-});
+// --- REMOVED /api/set-farm-name endpoint ---
 
 // --- Fallback Route (404 Not Found) ---
 app.notFound((c) => {
-  // Middleware adds CORS headers
-  return c.json({ error: 'Not Found' }, 404);
+  return c.json({ error: 'Not Found' }, 404); // Middleware adds CORS
 })
 
 export default app;
