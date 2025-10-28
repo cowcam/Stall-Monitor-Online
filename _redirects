@@ -1,5 +1,7 @@
-/:splat /dashboard.html 200!
-/index.html /index.html 200
-/setup.html /setup.html 200
-/create-farm /create-farm.html 200
-/assets/* /assets/:splat 200
+# Specific paths/assets first (prevents catch-all override)
+/                   /index.html             200
+/setup              /setup.html             200
+/assets/* /assets/:splat          200
+
+# Catch-all for everything else, fallback to dashboard.html
+/* /dashboard.html         200
