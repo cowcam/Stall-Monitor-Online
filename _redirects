@@ -1,6 +1,11 @@
-# Specific known paths
+# Serve specific HTML files first
+/                   /index.html         200
 /setup              /setup.html         200
+/dashboard.html     /dashboard.html     200 # Self-rewrite for dashboard template
+
+# Handle assets
 /assets/* /assets/:splat      200
 
-# Catch-all fallback for SPA-like routing (MUST BE LAST)
-/* /dashboard.html     200
+# Handle all requests starting with /dashboard/
+# Serve the dashboard template for any farm name
+/dashboard/* /dashboard.html     200

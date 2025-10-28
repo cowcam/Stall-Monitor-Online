@@ -164,7 +164,7 @@ app.post('/api/create-checkout-session', async (c) => {
         'line_items[][quantity]': '1',
         'mode': 'subscription',
         // --- UPDATED success_url ---
-        'success_url': `${YOUR_DOMAIN}/${farmNameSlug}?session_id={CHECKOUT_SESSION_ID}`, // Redirect directly to farm dashboard
+        'success_url': `${YOUR_DOMAIN}/dashboard/${farmNameSlug}?session_id={CHECKOUT_SESSION_ID}`, // Go to dashboard/farm
         'cancel_url': `${YOUR_DOMAIN}`,
         'customer_email': email,
       }),

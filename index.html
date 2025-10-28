@@ -338,7 +338,7 @@
 
                     // Redirect based on farm_name
                     if (data.farm_name) {
-                        window.location.href = `/${encodeURIComponent(data.farm_name)}`; // Use farm name from response
+                        window.location.href = `/dashboard/${encodeURIComponent(data.farm_name)}`; // Redirect to dashboard/farm
                     } else {
                         // This case should ideally not happen if login is only allowed after registration+payment
                         // Maybe redirect to setup or show an error

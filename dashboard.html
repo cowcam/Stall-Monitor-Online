@@ -163,19 +163,23 @@
         const WORKER_URL = 'https://my-backend.stallmonitor.workers.dev';
 
         document.addEventListener('DOMContentLoaded', () => {
-            // 1. Get the farm name from the URL path
-            const path = window.location.pathname; // e.g., "/my-farm"
-            const farmName = path.slice(1); // Removes the leading "/", result: "my-farm"
+            // 1. Get the farm name from the URL path (UPDATED)
+            const path = window.location.pathname; // e.g., "/dashboard/my-farm"
+            const parts = path.split('/'); // ["", "dashboard", "my-farm"]
+            
+            // Get the part AFTER "/dashboard/"
+            const farmName = parts.length > 2 ? decodeURIComponent(parts[2]) : null; 
 
             const titleElement = document.getElementById('dashboard-title');
             const dataElement = document.getElementById('farm-data');
 
             if (!farmName) {
-                titleElement.textContent = 'Error: Farm name not found in URL.';
+                titleElement.textContent = 'Error: Farm name not found in URL path (/dashboard/YourFarmName).';
+                dataElement.textContent = 'Please log in again.';
                 return;
             }
 
-            titleElement.textContent = `Dashboard for ${farmName}`;
+            titleElement.textContent = `Dashboard for ${farmName}`; // This part stays the same
 
             // 2. TODO: Fetch farm-specific data from the backend
             // We need to create a NEW endpoint in my-backend, e.g., GET /api/farm-data?name=...
@@ -206,7 +210,7 @@
             */
             
             // For now, just show a placeholder message
-             dataElement.textContent = `Welcome! Data for ${farmName} will load here once the backend API is ready.`;
+            dataElement.textContent = `Welcome! Data for ${farmName} will load here.`;
 
         });
     </script>
