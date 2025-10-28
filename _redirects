@@ -1,2 +1,5 @@
-/ /index.html 200
-/* /dashboard.html 200
+/:splat /dashboard.html 200!
+/index.html /index.html 200
+/setup.html /setup.html 200
+/create-farm /create-farm.html 200
+/assets/* /assets/:splat 200
