@@ -1,12 +1,6 @@
-# Explicit self-rewrites
-/index.html         /index.html         200
-/setup.html         /setup.html         200
-/dashboard.html     /dashboard.html     200
-
-# Specific user-facing paths
-/                   /index.html         200
+# Specific known paths first
 /setup              /setup.html         200
 /assets/* /assets/:splat      200
 
-# Catch-all fallback (MUST BE LAST)
-#/* 		   /dashboard.html     200
+# Handle all dashboard paths by serving the dashboard template
+/dashboard/* /dashboard.html     200
