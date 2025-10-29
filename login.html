@@ -64,7 +64,7 @@
 
     <script>
         const form = document.getElementById('login-form');
-        const emailInput = document.getElementById('email');
+        const identifierInput = document.getElementById('email'); // Input can be email or farm name
         const passwordInput = document.getElementById('password');
         const messageArea = document.getElementById('message');
 
@@ -73,29 +73,39 @@
             messageArea.textContent = '';
             messageArea.className = '';
 
-            // FastAPI's token endpoint expects form data, not JSON
-            const formData = new URLSearchParams();
-            formData.append('username', emailInput.value);
-            formData.append('password', passwordInput.value);
+            const payload = {
+                identifier: identifierInput.value,
+                password: passwordInput.value
+            };
 
             try {
-                const response = await fetch('/token', {
+                const response = await fetch('/login', {
                     method: 'POST',
-                    headers: { 'Content-Type': 'application/x-www-form-urlencoded' },
-                    body: formData
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify(payload)
                 });
 
                 const data = await response.json();
 
                 if (response.ok) {
-                    localStorage.setItem('stallMonitorUserEmail', email);
-                    // On successful login, redirect to the dashboard
-                    window.location.href = '/dashboard';
+                    // Store email and farm name for use in the dashboard
+                    localStorage.setItem('stallMonitorUserEmail', data.email);
+                    localStorage.setItem('stallMonitorFarmName', data.farm_name);
+                    
+                    // On successful login, redirect to the dynamic dashboard URL
+                    if (data.farm_name) {
+                        window.location.href = `/dashboard/${encodeURIComponent(data.farm_name)}`;
+                    } else {
+                        // Fallback or error if farm_name is missing, though it shouldn't be
+                        messageArea.textContent = 'Login successful, but farm name is missing. Cannot redirect.';
+                        messageArea.className = 'error';
+                    }
                 } else {
-                    messageArea.textContent = data.detail || 'An unknown error occurred.';
+                    messageArea.textContent = data.error || 'An unknown error occurred.';
                     messageArea.className = 'error';
                 }
             } catch (error) {
+                console.error('Login request failed:', error);
                 messageArea.textContent = 'Could not connect to the server.';
                 messageArea.className = 'error';
             }
