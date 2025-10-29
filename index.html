@@ -323,7 +323,7 @@
 
                 if (response.ok) {
                     // SUCCESS!
-                    console.log('Login successful:', data);
+                    console.log('Login successful! Received data:', data);
                     // Store user info if Remember Me is checked
                     if (rememberMe) {
                         const userData = { email: data.email, farmName: data.farm_name };
@@ -338,6 +338,7 @@
 
                     // Redirect based on farm_name
                     if (data.farm_name) {
+                        console.log('Redirecting to farm:', data.farm_name);
                         window.location.href = `/dashboard/${encodeURIComponent(data.farm_name)}`; // Redirect to dashboard/farm
                     } else {
                         // This case should ideally not happen if login is only allowed after registration+payment
