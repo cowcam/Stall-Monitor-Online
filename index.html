@@ -267,7 +267,7 @@
                         const userData = JSON.parse(rememberedUser);
                         if (userData.farmName) {
                             console.log('Remembered user found, redirecting to dashboard...');
-                            window.location.href = `/${encodeURIComponent(userData.farmName)}`;
+                            window.location.href = `/dashboard/${encodeURIComponent(userData.farmName)}`;
                         }
                     } catch (e) {
                         console.error('Error parsing remembered user data:', e);
