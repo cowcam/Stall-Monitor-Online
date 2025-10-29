@@ -324,27 +324,18 @@
                 if (response.ok) {
                     // SUCCESS!
                     console.log('Login successful! Received data:', data);
-                    // Store user info if Remember Me is checked
-                    if (rememberMe) {
-                        const userData = { email: data.email, farmName: data.farm_name };
-                        localStorage.setItem('stallMonitorRememberedUser', JSON.stringify(userData));
-                        console.log('User remembered.');
-                    } else {
-                        // Clear any previous "remember me" data if unchecked
-                        localStorage.removeItem('stallMonitorRememberedUser');
-                        // Optionally use sessionStorage for non-persistent login state
-                        // sessionStorage.setItem('stallMonitorCurrentUser', JSON.stringify({ email: data.email, farmName: data.farm_name }));
-                    }
+                    const farmName = data.farm_name; // Store in a variable first
+
+                    if (rememberMe) { /* Store user data */ } else { /* Clear user data */ }
 
                     // Redirect based on farm_name
-                    if (data.farm_name) {
-                        console.log('Redirecting to farm:', data.farm_name);
-                        window.location.href = `/dashboard/${encodeURIComponent(data.farm_name)}`; // Redirect to dashboard/farm
+                    if (farmName && farmName.trim() !== '') { // Check if farmName is valid
+                        const encodedFarmName = encodeURIComponent(farmName);
+                        console.log(`Farm name found: "${farmName}", redirecting to /dashboard/${encodedFarmName}`);
+                        window.location.href = `/dashboard/${encodedFarmName}`; // Use the variable
                     } else {
-                        // This case should ideally not happen if login is only allowed after registration+payment
-                        // Maybe redirect to setup or show an error
-                        loginMessageArea.textContent = 'Login successful, but farm setup is incomplete. Please contact support.';
-                        loginMessageArea.className = 'message error';
+                        console.log('Farm name not found or empty in response, redirecting to setup.');
+                        window.location.href = '/setup'; // Fallback to setup if no farm name
                     }
                 } else {
                     // FAILURE (e.g., 401 "Invalid credentials")
