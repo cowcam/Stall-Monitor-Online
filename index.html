@@ -338,7 +338,7 @@
 
                     if (farmName && farmName.trim() !== '') {
                         const encodedFarmName = encodeURIComponent(farmName);
-                        const finalUrl = `/dashboard/${encodedFarmName}`;
+                        const finalUrl = `/dashboard.html?farm=${encodedFarmName}`;
                         window.location.href = finalUrl;
                     } else {
                         window.location.href = '/setup';

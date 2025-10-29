@@ -163,18 +163,11 @@
         const WORKER_URL = 'https://my-backend.stallmonitor.workers.dev';
 
         document.addEventListener('DOMContentLoaded', () => {
-        // 1. Get the farm name from the URL path (UPDATED)
-        const path = window.location.pathname; // e.g., "/dashboard/my-farm"
+        // 1. Get the farm name from the URL query parameters
+        const params = new URLSearchParams(window.location.search);
+        const farmName = params.get('farm'); // e.g., "My Farm"
 
-        // --- ADD DEBUGGING ---
-        console.log("Current Path:", path);
-        const parts = path.split('/'); // ["", "dashboard", "my-farm"]
-        console.log("Path Parts:", parts);
-        // --- END DEBUGGING ---
-
-        // Get the part AFTER "/dashboard/"
-        const farmName = parts.length > 2 ? decodeURIComponent(parts[2]) : null;
-        console.log("Extracted Farm Name:", farmName); // <-- ADDED Log
+        console.log("Extracted Farm Name from query param:", farmName);
 
         const titleElement = document.getElementById('dashboard-title');
         const dataElement = document.getElementById('farm-data');
