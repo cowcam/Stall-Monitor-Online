@@ -1,6 +1,6 @@
 # Handle the dashboard rewrite first. This will serve dashboard.html
 # for any path starting with /dashboard/, like /dashboard/AnyFarmName.
-#/dashboard/* /dashboard.html 200
+/dashboard/:farm /dashboard.html 200
 
 # Handle specific page routes.
 /setup /setup.html 200

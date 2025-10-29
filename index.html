@@ -328,12 +328,10 @@
                 if (response.ok) {
                     const farmName = data.farm_name;
                     const userEmail = data.email;
-                    alert(`DEBUG: Login successful!\nFarm Name received: ${farmName}`);
 
                     if (rememberMe) {
                         const userData = JSON.stringify({ farmName: farmName, email: userEmail });
                         localStorage.setItem('stallMonitorRememberedUser', userData);
-                        alert('DEBUG: Saved user to Remember Me.');
                     } else {
                         localStorage.removeItem('stallMonitorRememberedUser');
                     }
@@ -341,20 +339,16 @@
                     if (farmName && farmName.trim() !== '') {
                         const encodedFarmName = encodeURIComponent(farmName);
                         const finalUrl = `/dashboard/${encodedFarmName}`;
-                        alert(`DEBUG: Redirecting to: ${finalUrl}`);
                         window.location.href = finalUrl;
                     } else {
-                        alert('DEBUG: Farm name not found. Redirecting to /setup');
                         window.location.href = '/setup';
                     }
                 } else {
-                    alert(`DEBUG: Login failed! Server says: ${data.error}`);
                     loginMessageArea.textContent = data.error || 'An unknown error occurred.';
                     loginMessageArea.className = 'message error';
                 }
             } catch (error) {
                 console.error('Fetch failed:', error);
-                alert('DEBUG: Could not connect to the server.');
                 loginMessageArea.textContent = 'Could not connect to the server.';
                 loginMessageArea.className = 'message error';
             }
