@@ -1,5 +1,2 @@
-# Handle specific page routes.
-/setup /setup.html 200
-
 # Serve assets from the assets folder.
 /assets/* /assets/:splat 200

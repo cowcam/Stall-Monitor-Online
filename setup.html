@@ -203,17 +203,18 @@
 
     <script>
         document.addEventListener('DOMContentLoaded', () => {
-            // Get the farm name saved during the 'create-farm' step
-            // We need to ensure the user's email is still in localStorage to reliably get farm name,
-            // or better yet, store the farm name itself in localStorage after it's set.
+            const params = new URLSearchParams(window.location.search);
+            let farmName = params.get('farm'); // Get from URL first
 
-            // For now, let's assume farm name was stored (we'll adjust 'create-farm.html' next)
-            const farmName = localStorage.getItem('stallMonitorFarmName');
+            if (!farmName) {
+                // If not in URL, try getting from localStorage
+                farmName = localStorage.getItem('stallMonitorFarmName');
+            }
 
             const dashboardLink = document.getElementById('dashboard-link');
 
             if (farmName) {
-                dashboardLink.href = `/${farmName}`; // Set the link dynamically
+                dashboardLink.href = `/dashboard.html?farm=${encodeURIComponent(farmName)}`; // Set the correct link
             } else {
                 // If farm name isn't found, maybe link back home or show an error
                 dashboardLink.textContent = "Go Home (Farm name not found)";
