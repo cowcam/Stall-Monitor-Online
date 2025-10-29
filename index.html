@@ -194,6 +194,10 @@
                         <input type="password" id="login-password" required>
                     </div>
                     <div class="checkbox-group">
+                        <input type="checkbox" id="login-show-password" style="width: auto;">
+                        <label for="login-show-password">Show Password</label>
+                    </div>
+                    <div class="checkbox-group">
                          <input type="checkbox" id="remember-me">
                          <label for="remember-me">Remember Me</label>
                     </div>
@@ -360,7 +364,18 @@
         const showPasswordCheckbox = document.getElementById('show-password');
         const registerMessageArea = document.getElementById('register-message');
 
-        showPasswordCheckbox.addEventListener('change', () => { /* Unchanged */ });
+        const loginShowPasswordCheckbox = document.getElementById('login-show-password');
+
+        showPasswordCheckbox.addEventListener('change', () => {
+            const type = showPasswordCheckbox.checked ? 'text' : 'password';
+            registerPasswordInput.type = type;
+            confirmPasswordInput.type = type;
+        });
+
+        loginShowPasswordCheckbox.addEventListener('change', () => {
+            const type = loginShowPasswordCheckbox.checked ? 'text' : 'password';
+            loginPasswordInput.type = type;
+        });
 
         registerForm.addEventListener('submit', async (event) => {
             event.preventDefault();
