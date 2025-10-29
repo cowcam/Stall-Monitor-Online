@@ -131,26 +131,17 @@ app.post('/login', async (c) => {
 app.post('/api/create-checkout-session', async (c) => {
   try {
     console.log("Received request for /api/create-checkout-session");
-    const { email } = await c.req.json<{ email: string }>();
+    const { email, farm_name } = await c.req.json<{ email: string; farm_name: string }>();
     const stripe = c.env.STRIPE_API_KEY;
     const PRICE_ID = "price_1SG1n3CKer7QDo5DEf04QsgI"; // Your Price ID
     const YOUR_DOMAIN = 'https://www.stallmonitor.com'; // Use your actual domain variable
 
-    if (!email || !stripe) { /* Error checks */ return c.json(/*...*/); }
+    if (!email || !stripe || !farm_name) { /* Error checks */ return c.json(/*...*/); }
 
-    // --- Look up the farm name ---
-    const user = await c.env.DB.prepare('SELECT farm_name FROM users WHERE email = ?')
-                     .bind(email)
-                     .first<{ farm_name: string | null }>();
+    // --- Use the farm name from the request body ---
+    const farmNameSlug = encodeURIComponent(farm_name); // Ensure URL safety
 
-    if (!user || !user.farm_name) {
-        console.error(`Could not find farm name for email: ${email}`);
-        return c.json({ error: 'User or farm name not found for checkout session.' }, 404);
-    }
-    const farmNameSlug = encodeURIComponent(user.farm_name); // Ensure URL safety
-    // --- End lookup ---
-
-    console.log(`Creating Stripe session for email: ${email}, redirecting to farm: ${user.farm_name}`);
+    console.log(`Creating Stripe session for email: ${email}, redirecting to farm: ${farm_name}`);
 
     const sessionResponse = await fetch('https://api.stripe.com/v1/checkout/sessions', {
       method: 'POST',

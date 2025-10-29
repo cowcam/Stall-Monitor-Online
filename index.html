@@ -312,46 +312,51 @@
             loginMessageArea.textContent = 'Logging in...';
             loginMessageArea.className = 'message';
 
-            const identifier = loginIdentifierInput.value; // Get identifier
+            const identifier = loginIdentifierInput.value;
             const password = loginPasswordInput.value;
-            const rememberMe = rememberMeCheckbox.checked; // Check if box is checked
+            const rememberMe = rememberMeCheckbox.checked;
 
             try {
                 const response = await fetch(`${WORKER_URL}/login`, {
                     method: 'POST',
                     headers: { 'Content-Type': 'application/json' },
-                    body: JSON.stringify({ identifier: identifier, password: password }) // Send identifier
+                    body: JSON.stringify({ identifier: identifier, password: password })
                 });
 
                 const data = await response.json();
 
                 if (response.ok) {
-                    // SUCCESS!
-                    console.log('Login successful! Received data:', data);
-                    const farmName = data.farm_name; // Store in a variable first
+                    const farmName = data.farm_name;
+                    const userEmail = data.email;
+                    alert(`DEBUG: Login successful!\nFarm Name received: ${farmName}`);
 
-                    if (rememberMe) { /* Store user data */ } else { /* Clear user data */ }
-
-                    // Redirect based on farm_name
-                    if (farmName && farmName.trim() !== '') { // Check if farmName is valid
-                        const encodedFarmName = encodeURIComponent(farmName);
-                        console.log(`Farm name found: "${farmName}", redirecting to /dashboard/${encodedFarmName}`);
-                        window.location.href = `/dashboard/${encodedFarmName}`; // Use the variable
+                    if (rememberMe) {
+                        const userData = JSON.stringify({ farmName: farmName, email: userEmail });
+                        localStorage.setItem('stallMonitorRememberedUser', userData);
+                        alert('DEBUG: Saved user to Remember Me.');
                     } else {
-                        console.log('Farm name not found or empty in response, redirecting to setup.');
-                        window.location.href = '/setup'; // Fallback to setup if no farm name
+                        localStorage.removeItem('stallMonitorRememberedUser');
+                    }
+
+                    if (farmName && farmName.trim() !== '') {
+                        const encodedFarmName = encodeURIComponent(farmName);
+                        const finalUrl = `/dashboard/${encodedFarmName}`;
+                        alert(`DEBUG: Redirecting to: ${finalUrl}`);
+                        window.location.href = finalUrl;
+                    } else {
+                        alert('DEBUG: Farm name not found. Redirecting to /setup');
+                        window.location.href = '/setup';
                     }
                 } else {
-                    // FAILURE (e.g., 401 "Invalid credentials")
+                    alert(`DEBUG: Login failed! Server says: ${data.error}`);
                     loginMessageArea.textContent = data.error || 'An unknown error occurred.';
                     loginMessageArea.className = 'message error';
-                    localStorage.removeItem('stallMonitorRememberedUser'); // Clear on failed login
                 }
             } catch (error) {
                 console.error('Fetch failed:', error);
+                alert('DEBUG: Could not connect to the server.');
                 loginMessageArea.textContent = 'Could not connect to the server.';
                 loginMessageArea.className = 'message error';
-                localStorage.removeItem('stallMonitorRememberedUser'); // Clear on failed login
             }
         });
 
@@ -429,9 +434,10 @@
           subscribeButton.disabled = true; // Disable button
 
           const emailToSubscribe = localStorage.getItem('stallMonitorUserEmail'); // Get email from storage
+          const farmNameToSubscribe = localStorage.getItem('stallMonitorFarmName'); // Get farm name from storage
 
-          if (!emailToSubscribe) {
-              alert('Error: Could not retrieve email for subscription. Please try registering again.');
+          if (!emailToSubscribe || !farmNameToSubscribe) {
+              alert('Error: Could not retrieve user details for subscription. Please try registering again.');
               subscribeButton.textContent = "Subscribe Now";
               subscribeButton.disabled = false;
               return;
@@ -441,7 +447,7 @@
             const response = await fetch(`${WORKER_URL}/api/create-checkout-session`, {
               method: 'POST',
               headers: { 'Content-Type': 'application/json' },
-              body: JSON.stringify({ email: emailToSubscribe }) // Use stored email
+              body: JSON.stringify({ email: emailToSubscribe, farm_name: farmNameToSubscribe }) // Send both email and farm name
             });
 
             const data = await response.json();
