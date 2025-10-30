@@ -12,5 +12,9 @@
       "database_name": "my-guestbook-db",
       "database_id": "86e92860-08ef-4e6d-9513-e6ed5a9e04b3"
     }
-  ]
+  ],
+  "vars": {
+    "STRIPE_API_KEY": "your-stripe-api-key",
+    "STRIPE_WEBHOOK_SECRET": "your-stripe-webhook-secret"
+  }
 }

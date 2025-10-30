@@ -1,8 +1,10 @@
 import { Hono } from 'hono';
+import Stripe from 'stripe';
 
 export interface Env {
   DB: D1Database;
   STRIPE_API_KEY: string;
+  STRIPE_WEBHOOK_SECRET: string;
 }
 
 // --- Crypto Helper Functions (Unchanged) ---
@@ -178,6 +180,70 @@ app.post('/api/create-checkout-session', async (c) => {
 });
 
 // --- REMOVED /api/set-farm-name endpoint ---
+
+// --- Handle POST for /webhook (NEW) ---
+app.post('/webhook', async (c) => {
+  const stripe = new Stripe(c.env.STRIPE_API_KEY);
+  const signature = c.req.header('stripe-signature');
+  const body = await c.req.text();
+
+  try {
+    const event = await stripe.webhooks.constructEventAsync(
+      body,
+      signature!,
+      c.env.STRIPE_WEBHOOK_SECRET
+    );
+
+    if (event.type === 'checkout.session.completed') {
+      const session = event.data.object as Stripe.Checkout.Session;
+      const customerEmail = session.customer_email;
+      const subscriptionId = session.subscription;
+
+      // Update the user's subscription information in the database
+      await c.env.DB.prepare(
+        'UPDATE users SET stripe_subscription_id = ?, stripe_subscription_status = ? WHERE email = ?'
+      ).bind(subscriptionId, 'active', customerEmail).run();
+    }
+
+    return c.json({ received: true });
+  } catch (e: any) {
+    console.error("--- ERROR IN /webhook ---", e);
+    return c.json({ error: 'Error processing webhook: ' + (e instanceof Error ? e.message : String(e)) }, 500);
+  }
+});
+
+// --- Handle GET for /check-subscription (NEW) ---
+app.get('/check-subscription', async (c) => {
+  try {
+    const { identifier } = c.req.query<{ identifier: string }>();
+    if (!identifier) {
+      return c.json({ error: 'Identifier (email or farm name) is required' }, 400);
+    }
+
+    const isEmail = identifier.includes('@');
+    const query = isEmail
+      ? 'SELECT stripe_subscription_id, stripe_subscription_status FROM users WHERE email = ?'
+      : 'SELECT stripe_subscription_id, stripe_subscription_status FROM users WHERE farm_name = ?';
+
+    const user = await c.env.DB.prepare(query)
+      .bind(identifier)
+      .first<{ stripe_subscription_id: string; stripe_subscription_status: string }>();
+
+    if (!user) {
+      return c.json({ error: 'User not found' }, 404);
+    }
+
+    // For now, we'll just return the status from the database.
+    // In a real-world scenario, you would also want to verify the subscription status with Stripe directly.
+    const isActive = user.stripe_subscription_status === 'active';
+
+    return c.json({ subscription_active: isActive });
+
+  } catch (e: any) {
+    console.error("--- ERROR IN /check-subscription ---", e);
+    return c.json({ error: 'Error checking subscription: ' + (e instanceof Error ? e.message : String(e)) }, 500);
+  }
+});
 
 // --- Fallback Route (404 Not Found) ---
 app.notFound((c) => {
