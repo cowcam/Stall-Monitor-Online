@@ -1,0 +1,18 @@
+{
+    "farm_info": {
+        "name": "",
+        "pens": [
+            {
+                "name": "",
+                "cooldown": 0
+            }
+        ]
+    },
+    "models": [],
+    "cameras": [],
+    "emails": [],
+    "advanced_training_settings": {
+        "project": "C:\\dev\\Stall-Monitor-Online\\models",
+        "device": "0"
+    }
+}
