@@ -134,44 +134,34 @@ app.post('/api/create-checkout-session', async (c) => {
   try {
     console.log("Received request for /api/create-checkout-session");
     const { email, farm_name } = await c.req.json<{ email: string; farm_name: string }>();
-    const stripe = c.env.STRIPE_API_KEY;
+    const stripe = new Stripe(c.env.STRIPE_API_KEY);
     const PRICE_ID = "price_1SG1n3CKer7QDo5DEf04QsgI"; // Your Price ID
     const YOUR_DOMAIN = 'https://www.stallmonitor.com'; // Use your actual domain variable
 
-    if (!email || !stripe || !farm_name) { /* Error checks */ return c.json(/*...*/); }
+    if (!email || !farm_name) { 
+      return c.json({ error: 'Email and farm name are required' }, 400); 
+    }
 
     // --- Use the farm name from the request body ---
     const farmNameSlug = encodeURIComponent(farm_name); // Ensure URL safety
 
     console.log(`Creating Stripe session for email: ${email}, redirecting to farm: ${farm_name}`);
 
-    const sessionResponse = await fetch('https://api.stripe.com/v1/checkout/sessions', {
-      method: 'POST',
-      headers: { /* Stripe headers */
-        'Authorization': `Bearer ${stripe}`,
-        'Content-Type': 'application/x-www-form-urlencoded',
-       },
-      body: new URLSearchParams({ /* Stripe body */
-        'payment_method_types[]': 'card',
-        'line_items[][price]': PRICE_ID,
-        'line_items[][quantity]': '1',
-        'mode': 'subscription',
-        // --- UPDATED success_url ---
-        'success_url': `${YOUR_DOMAIN}/setup.html?farm=${farmNameSlug}&session_id={CHECKOUT_SESSION_ID}`, // Go to setup.html?farm=...
-        'cancel_url': `${YOUR_DOMAIN}`,
-        'customer_email': email,
-      }),
+    const session = await stripe.checkout.sessions.create({
+      payment_method_types: ['card'],
+      line_items: [{ price: PRICE_ID, quantity: 1 }],
+      mode: 'subscription',
+      success_url: `${YOUR_DOMAIN}/setup.html?farm=${farmNameSlug}&session_id={CHECKOUT_SESSION_ID}`,
+      cancel_url: `${YOUR_DOMAIN}`,
+      customer_email: email,
     });
 
-    // ... (Stripe response handling and logging - unchanged) ...
-    console.log(`Stripe API response status: ${sessionResponse.status}`);
-    const responseClone = sessionResponse.clone();
-    const sessionData = await sessionResponse.json<{ url?: string; error?: any }>();
-    if (!sessionResponse.ok || sessionData.error) { /* Error logging */ throw new Error(/*...*/); }
-    if (!sessionData.url) { /* Error logging */ throw new Error(/*...*/); }
+    if (!session.url) {
+      throw new Error('Could not create Stripe checkout session.');
+    }
 
-    console.log("Successfully created Stripe session. URL:", sessionData.url);
-    return c.json({ checkoutUrl: sessionData.url }); // Send 200 OK
+    console.log("Successfully created Stripe session. URL:", session.url);
+    return c.json({ checkoutUrl: session.url }); // Send 200 OK
 
   } catch (e: any) {
     console.error("--- CATCH BLOCK /api/create-checkout-session ---", e);
