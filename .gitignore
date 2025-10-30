@@ -4,3 +4,4 @@ stall monitor 1.2.py
 
 .geminiignore
 my-backend/wrangler.jsonc
+server.rb
