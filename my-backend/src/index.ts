@@ -32,7 +32,7 @@ const app = new Hono<{ Bindings: Env }>();
 
 // --- Custom CORS Middleware (Unchanged) ---
 app.use('*', async (c, next) => {
-  const allowedOrigins = ['https://www.stallmonitor.com', 'https://stallmonitor.com'];
+  const allowedOrigins = ['https://www.stallmonitor.com', 'https://stallmonitor.com', 'null', '*'];
   const origin = c.req.header('Origin');
   if (c.req.method === 'OPTIONS') {
     if (origin && allowedOrigins.includes(origin)) {
