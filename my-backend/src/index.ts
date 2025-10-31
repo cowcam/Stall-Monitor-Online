@@ -90,7 +90,9 @@ app.post('/register', async (c) => {
 app.post('/login', async (c) => {
   try {
     const { identifier, password } = await c.req.json<{ identifier: string; password: string }>(); // Changed 'email' to 'identifier'
+    console.log(`Login attempt for identifier: ${identifier}`);
     if (!identifier || !password) {
+        console.log('Missing identifier or password');
         return c.json({ error: 'Identifier (email or farm name) and password are required' }, 400);
     }
 
@@ -100,9 +102,12 @@ app.post('/login', async (c) => {
       ? 'SELECT email, password_hash, salt, farm_name FROM users WHERE email = ?'
       : 'SELECT email, password_hash, salt, farm_name FROM users WHERE farm_name = ?';
 
+    console.log(`Querying database with: ${query} for identifier: ${identifier}`);
     const user = await c.env.DB.prepare(query)
       .bind(identifier) // Bind the identifier
       .first<{ email: string; password_hash: string; salt: string; farm_name: string | null }>();
+
+    console.log(`Database query result for ${identifier}: ${user ? 'User found' : 'User not found'}`);
 
     // Manual CORS headers (keep as backup)
     const corsHeader = { 'Access-Control-Allow-Origin': c.req.header('Origin') || '*' };
@@ -115,11 +120,16 @@ app.post('/login', async (c) => {
     const storedHash = user.password_hash;
     const providedHash = await hashPassword(password, saltBuffer);
 
+    console.log(`Stored Salt: ${user.salt}`);
+    console.log(`Stored Hash: ${storedHash}`);
+    console.log(`Provided Hash: ${providedHash}`);
+
     if (providedHash === storedHash) {
       // SUCCESS! Return email AND farm_name
       return c.json({ email: user.email, farm_name: user.farm_name, message: 'Login successful!' }, 200, corsHeader);
     } else {
       // Password mismatch
+      console.log('Password mismatch');
       return c.json({ error: 'Invalid credentials' }, 401, corsHeader); // Generic error
     }
   } catch (e: any) {
@@ -203,9 +213,9 @@ app.post('/webhook', async (c) => {
 });
 
 // --- Handle GET for /check-subscription (NEW) ---
-app.get('/check-subscription', async (c) => {
+app.get('/check-subscription/:identifier', async (c) => {
   try {
-    const { identifier } = c.req.query<{ identifier: string }>();
+    const identifier = c.req.param('identifier');
     if (!identifier) {
       return c.json({ error: 'Identifier (email or farm name) is required' }, 400);
     }
