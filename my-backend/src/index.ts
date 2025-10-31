@@ -215,18 +215,22 @@ app.post('/webhook', async (c) => {
 // --- Handle GET for /check-subscription (NEW) ---
 app.get('/check-subscription/:identifier', async (c) => {
   try {
-    const encodedIdentifier = c.req.param('identifier');
-    // Manually replace '+' with a space before decoding, as decodeURIComponent doesn't handle '+' for spaces
+    const rawPath = c.req.url; // Get the full URL
+    const pathParts = rawPath.split('/');
+    const encodedIdentifier = pathParts[pathParts.length - 1]; // Get the last part of the path
     const identifier = decodeURIComponent(encodedIdentifier.replace(/\+/g, ' '));
-    console.log(`Check subscription for identifier (from path): ${encodedIdentifier}`);
+
+    console.log(`Raw Path: ${rawPath}`);
+    console.log(`Encoded identifier (from raw path): ${encodedIdentifier}`);
     console.log(`Decoded identifier: ${identifier}`);
+
     if (!identifier) {
       return c.json({ error: 'Identifier (email or farm name) is required' }, 400);
     }
 
     const isEmail = identifier.includes('@');
     const query = isEmail
-      ? 'SELECT email, password_hash, salt, farm_name FROM users WHERE email = ?'
+      ? 'SELECT stripe_subscription_id, stripe_subscription_status FROM users WHERE email = ?'
       : 'SELECT stripe_subscription_id, stripe_subscription_status FROM users WHERE farm_name = ?';
 
     console.log(`Querying database with: ${query} for identifier: ${identifier}`);
@@ -245,12 +249,6 @@ app.get('/check-subscription/:identifier', async (c) => {
     const isActive = user.stripe_subscription_status === 'active';
     console.log(`Subscription status for ${identifier}: ${isActive ? 'active' : 'inactive'}`);
     return c.json({ subscription_active: isActive });
-
-  } catch (e: any) {
-    console.error("--- ERROR IN /check-subscription ---", e);
-    return c.json({ error: 'Error checking subscription: ' + (e instanceof Error ? e.message : String(e)) }, 500);
-  }
-});
 
 // --- Fallback Route (404 Not Found) ---
 app.notFound((c) => {
