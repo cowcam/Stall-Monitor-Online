@@ -236,7 +236,7 @@ app.get('/check-subscription/:identifier', async (c) => {
     // For now, we'll just return the status from the database.
     // In a real-world scenario, you would also want to verify the subscription status with Stripe directly.
     const isActive = user.stripe_subscription_status === 'active';
-
+    console.log(`Subscription status for ${identifier}: ${isActive ? 'active' : 'inactive'}`);
     return c.json({ subscription_active: isActive });
 
   } catch (e: any) {
