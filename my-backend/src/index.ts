@@ -215,8 +215,10 @@ app.post('/webhook', async (c) => {
 // --- Handle GET for /check-subscription (NEW) ---
 app.get('/check-subscription/:identifier', async (c) => {
   try {
-    const identifier = c.req.param('identifier');
-    console.log(`Check subscription for identifier (from path): ${identifier}`);
+    const encodedIdentifier = c.req.param('identifier');
+    const identifier = decodeURIComponent(encodedIdentifier);
+    console.log(`Check subscription for identifier (from path): ${encodedIdentifier}`);
+    console.log(`Decoded identifier: ${identifier}`);
     if (!identifier) {
       return c.json({ error: 'Identifier (email or farm name) is required' }, 400);
     }
@@ -229,7 +231,7 @@ app.get('/check-subscription/:identifier', async (c) => {
     console.log(`Querying database with: ${query} for identifier: ${identifier}`);
     const user = await c.env.DB.prepare(query)
       .bind(identifier) // Bind the identifier
-      .first<{ stripe_subscription_id: string; stripe_subscription_status: string }>();
+      .first<{ stripe_subscription_id: string; password_hash: string; salt: string; farm_name: string | null }>();
 
     console.log(`Database query result for ${identifier}: ${user ? 'User found' : 'User not found'}`);
 
