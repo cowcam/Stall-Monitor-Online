@@ -216,7 +216,8 @@ app.post('/webhook', async (c) => {
 app.get('/check-subscription/:identifier', async (c) => {
   try {
     const encodedIdentifier = c.req.param('identifier');
-    const identifier = decodeURIComponent(encodedIdentifier);
+    // Manually replace '+' with a space before decoding, as decodeURIComponent doesn't handle '+' for spaces
+    const identifier = decodeURIComponent(encodedIdentifier.replace(/\+/g, ' '));
     console.log(`Check subscription for identifier (from path): ${encodedIdentifier}`);
     console.log(`Decoded identifier: ${identifier}`);
     if (!identifier) {
@@ -225,7 +226,7 @@ app.get('/check-subscription/:identifier', async (c) => {
 
     const isEmail = identifier.includes('@');
     const query = isEmail
-      ? 'SELECT stripe_subscription_id, stripe_subscription_status FROM users WHERE email = ?'
+      ? 'SELECT email, password_hash, salt, farm_name FROM users WHERE email = ?'
       : 'SELECT stripe_subscription_id, stripe_subscription_status FROM users WHERE farm_name = ?';
 
     console.log(`Querying database with: ${query} for identifier: ${identifier}`);
