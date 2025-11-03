@@ -216,11 +216,11 @@ app.post('/webhook', async (c) => {
 app.get('/check-subscription/:identifier', async (c) => {
   try {
     const encodedIdentifier = c.req.param('identifier');
-    const identifier = decodeURIComponent(encodedIdentifier);
+    // Note: The identifier from the path is already decoded by Hono.
+    // No need for decodeURIComponent.
+    const identifier = encodedIdentifier; 
 
-    console.log(`Raw Path: ${rawPath}`);
-    console.log(`Encoded identifier (from raw path): ${encodedIdentifier}`);
-    console.log(`Decoded identifier: ${identifier}`);
+    console.log(`Checking subscription for identifier: ${identifier}`);
 
     if (!identifier) {
       return c.json({ error: 'Identifier (email or farm name) is required' }, 400);
@@ -233,8 +233,8 @@ app.get('/check-subscription/:identifier', async (c) => {
 
     console.log(`Querying database with: ${query} for identifier: ${identifier}`);
     const user = await c.env.DB.prepare(query)
-      .bind(identifier) // Bind the identifier
-      .first<{ stripe_subscription_id: string; password_hash: string; salt: string; farm_name: string | null }>();
+      .bind(identifier)
+      .first<{ stripe_subscription_id: string; stripe_subscription_status: string }>(); // Corrected type
 
     console.log(`Database query result for ${identifier}: ${user ? 'User found' : 'User not found'}`);
 
@@ -242,15 +242,20 @@ app.get('/check-subscription/:identifier', async (c) => {
       return c.json({ error: 'User not found' }, 404);
     }
 
-    // For now, we'll just return the status from the database.
-    // In a real-world scenario, you would also want to verify the subscription status with Stripe directly.
     const isActive = user.stripe_subscription_status === 'active';
     console.log(`Subscription status for ${identifier}: ${isActive ? 'active' : 'inactive'}`);
     return c.json({ subscription_active: isActive });
 
+  } catch (e: any) { // <-- FIX: ADDED CATCH BLOCK
+    console.error("--- ERROR IN /check-subscription ---", e);
+    return c.json({ error: 'Error checking subscription: ' + (e instanceof Error ? e.message : String(e)) }, 500);
+  }
+}); // <-- FIX: ADDED CLOSING FOR app.get
+
 // --- Fallback Route (404 Not Found) ---
 app.notFound((c) => {
   return c.json({ error: 'Not Found' }, 404); // Middleware adds CORS
-})
+});
 
 export default app;
+// <-- FIX: REMOVED EXTRA '}' FROM END OF FILE
