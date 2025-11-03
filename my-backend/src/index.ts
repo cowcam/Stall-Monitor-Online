@@ -215,10 +215,8 @@ app.post('/webhook', async (c) => {
 // --- Handle GET for /check-subscription (NEW) ---
 app.get('/check-subscription/:identifier', async (c) => {
   try {
-    const rawPath = c.req.url; // Get the full URL
-    const pathParts = rawPath.split('/');
-    const encodedIdentifier = pathParts[pathParts.length - 1]; // Get the last part of the path
-    const identifier = decodeURIComponent(encodedIdentifier.replace(/\+/g, ' '));
+    const encodedIdentifier = c.req.param('identifier');
+    const identifier = decodeURIComponent(encodedIdentifier);
 
     console.log(`Raw Path: ${rawPath}`);
     console.log(`Encoded identifier (from raw path): ${encodedIdentifier}`);
