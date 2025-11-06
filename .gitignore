@@ -7,3 +7,11 @@ my-backend/wrangler.jsonc
 server.rb
 
 start_web_server.py
+
+prompt.txt
+
+/alerts
+
+/models
+
+/train

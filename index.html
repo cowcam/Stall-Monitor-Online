@@ -5,7 +5,43 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Stall Monitor - 24/7 Cow Behaviour Analysis</title>
     <link rel="icon" href="/assets/stallmonitor.png" type="image/png">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0-beta3/css/all.min.css">
     <style>
+        .user-menu {
+            position: relative;
+            margin-left: auto;
+        }
+
+        .user-menu .fa-user-circle {
+            font-size: 2em;
+            cursor: pointer;
+        }
+
+        .dropdown-content {
+            display: none;
+            position: absolute;
+            right: 0;
+            background-color: var(--card-color);
+            min-width: 160px;
+            box-shadow: 0px 8px 16px 0px rgba(0,0,0,0.2);
+            z-index: 1;
+        }
+
+        .dropdown-content a {
+            color: var(--text-color);
+            padding: 12px 16px;
+            text-decoration: none;
+            display: block;
+        }
+
+        .dropdown-content a:hover {
+            background-color: var(--bg-color);
+        }
+
+        .dropdown-content.dropdown-active {
+            display: block;
+        }
+
         :root {
             --text-color: rgb(240, 227, 197);
             --bg-color: rgb(36, 39, 48);
@@ -161,6 +197,47 @@
         .modal-container h2 { margin-top: 0; margin-bottom: 20px; font-weight: 500; }
         .modal-container p { line-height: 1.6; opacity: 0.9; }
         .modal-container button { width: 100%; padding: 14px; border: none; border-radius: 6px; background-color: var(--text-color); color: var(--bg-color); font-size: 1.1em; font-weight: bold; cursor: pointer; margin-top: 20px; }
+
+        .feature-grid {
+            display: flex;
+            flex-direction: column;
+            gap: 40px;
+            margin-top: 60px;
+        }
+
+        .feature-item {
+            display: flex;
+            align-items: center;
+            gap: 30px;
+            background-color: var(--card-color);
+            padding: 30px;
+            border-radius: 12px;
+            border: 1px solid var(--border-color);
+        }
+
+        .feature-item.reverse {
+            flex-direction: row-reverse;
+        }
+
+        .feature-image {
+            flex: 1;
+        }
+
+        .feature-image img {
+            width: 100%;
+            border-radius: 8px;
+        }
+
+        .feature-description {
+            flex: 1;
+            text-align: center;
+        }
+
+        .feature-description h3 {
+            font-size: 1.8em;
+            font-weight: 500;
+            color: var(--text-color);
+        }
     </style>
 </head>
 <body>
@@ -168,71 +245,108 @@
     <header class="header">
         <img src="/assets/stallmonitor.png" alt="Stall Monitor Logo">
         <h1>Stall Monitor</h1>
+        <div class="user-menu">
+            <i class="fas fa-user-circle"></i>
+            <div class="dropdown-content">
+                <a href="#" id="signin-link">Sign In</a>
+                <a href="#" id="signup-link">Sign Up</a>
+            </div>
+        </div>
     </header>
 
     <div class="main-content">
         <h2 class="tagline">24/7 Cow Behaviour Analysis</h2>
 
         <div class="video-container">
-           <video id="demo-video" autoplay muted playsinline><source src="/assets/stall_monitor_demo.mp4" type="video/mp4"></video>
-           <img id="video-placeholder" src="/assets/collage2.jpg" alt="Stall Monitor Collage" style="display: none; width: 100%; border-radius: 12px;">
+           <img id="video-placeholder" src="/assets/collage2.jpg" alt="Stall Monitor Collage" style="width: 100%; border-radius: 12px;">
         </div>
 
-        <div class="form-container">
-            <div class="tab-buttons">
-                <button class="tab-button active" onclick="showForm('login')">Sign In</button>
-                <button class="tab-button" onclick="showForm('register')">Sign Up</button>
+        <section class="feature-grid">
+            <div class="feature-item">
+                <div class="feature-image">
+                    <img src="/assets/calvingalerts.jpg" alt="Calving Alerts">
+                </div>
+                <div class="feature-description">
+                    <h3>Calving Alerts</h3>
+                </div>
             </div>
-
-            <div id="login-form-section" class="form-section active">
-                <form id="login-form">
-                    <div class="form-group">
-                        <label for="login-identifier">Email or Farm Name</label>
-                        <input type="text" id="login-identifier" required> </div>
-                    <div class="form-group">
-                        <label for="login-password">Password</label>
-                        <input type="password" id="login-password" required>
-                    </div>
-                    <div class="checkbox-group">
-                        <input type="checkbox" id="login-show-password" style="width: auto;">
-                        <label for="login-show-password">Show Password</label>
-                    </div>
-                    <div class="checkbox-group">
-                         <input type="checkbox" id="remember-me">
-                         <label for="remember-me">Remember Me</label>
-                    </div>
-                    <button type="submit">Log In</button>
-                    <p id="login-message" class="message"></p>
-                </form>
+            <div class="feature-item reverse">
+                <div class="feature-image">
+                    <img src="/assets/heatalerts.jpg" alt="Heat Alerts">
+                </div>
+                <div class="feature-description">
+                    <h3>Heat Alerts</h3>
+                </div>
             </div>
+            <div class="feature-item">
+                <div class="feature-image">
+                    <img src="/assets/activitygraphs.jpg" alt="Activity Graphs">
+                </div>
+                <div class="feature-description">
+                    <h3>Activity Graphs</h3>
+                </div>
+            </div>
+        </section>
 
-            <div id="register-form-section" class="form-section">
-                <form id="register-form">
-                    <div class="form-group">
-                        <label for="register-email">Email Address</label>
-                        <input type="email" id="register-email" required>
-                    </div>
-                    <div class="form-group">
-                        <label for="register-farm-name">Farm Name</label>
-                        <input type="text" id="register-farm-name" required minlength="3" maxlength="50" pattern="[a-zA-Z0-9\s-]+">
-                    </div>
-                    <div class="form-group">
-                        <label for="register-password">Password</label>
-                        <input type="password" id="register-password" required>
-                    </div>
-                    <div class="form-group">
-                        <label for="confirm-password">Confirm Password</label>
-                        <input type="password" id="confirm-password" required>
-                    </div>
-                    <div class="checkbox-group">
-                        <input type="checkbox" id="show-password" style="width: auto;">
-                        <label for="show-password">Show Password</label>
-                    </div>
-                    <button type="submit">Register</button>
-                    <p id="register-message" class="message"></p>
-                </form>
+    <div id="auth-modal" class="modal-overlay">
+        <div class="modal-container">
+            <div class="form-container">
+                <div class="tab-buttons">
+                    <button class="tab-button active" onclick="showForm('login')">Sign In</button>
+                    <button class="tab-button" onclick="showForm('register')">Sign Up</button>
+                </div>
+
+                <div id="login-form-section" class="form-section active">
+                    <form id="login-form">
+                        <div class="form-group">
+                            <label for="login-identifier">Email or Farm Name</label>
+                            <input type="text" id="login-identifier" required> </div>
+                        <div class="form-group">
+                            <label for="login-password">Password</label>
+                            <input type="password" id="login-password" required>
+                        </div>
+                        <div class="checkbox-group">
+                            <input type="checkbox" id="login-show-password" style="width: auto;">
+                            <label for="login-show-password">Show Password</label>
+                        </div>
+                        <div class="checkbox-group">
+                             <input type="checkbox" id="remember-me">
+                             <label for="remember-me">Remember Me</label>
+                        </div>
+                        <button type="submit">Log In</button>
+                        <p id="login-message" class="message"></p>
+                    </form>
+                </div>
+
+                <div id="register-form-section" class="form-section">
+                    <form id="register-form">
+                        <div class="form-group">
+                            <label for="register-email">Email Address</label>
+                            <input type="email" id="register-email" required>
+                        </div>
+                        <div class="form-group">
+                            <label for="register-farm-name">Farm Name</label>
+                            <input type="text" id="register-farm-name" required minlength="3" maxlength="50" pattern="[a-zA-Z0-9\s-]+">
+                        </div>
+                        <div class="form-group">
+                            <label for="register-password">Password</label>
+                            <input type="password" id="register-password" required>
+                        </div>
+                        <div class="form-group">
+                            <label for="confirm-password">Confirm Password</label>
+                            <input type="password" id="confirm-password" required>
+                        </div>
+                        <div class="checkbox-group">
+                            <input type="checkbox" id="show-password" style="width: auto;">
+                            <label for="show-password">Show Password</label>
+                        </div>
+                        <button type="submit">Register</button>
+                        <p id="register-message" class="message"></p>
+                    </form>
+                </div>
             </div>
         </div>
+    </div>
     </div>
 
     <div id="subscription-modal" class="modal-overlay">
@@ -280,15 +394,45 @@
                 }
             } // <-- Close the 'else' block for the path check
 
-            // Video ended logic (Keep this outside the 'else')
-            const video = document.getElementById('demo-video');
-            const placeholder = document.getElementById('video-placeholder');
-            video.addEventListener('ended', () => {
-                video.style.display = 'none';
-                placeholder.style.display = 'block';
-            });
+
         });
 
+
+        const userMenu = document.querySelector('.user-menu');
+        const dropdownContent = document.querySelector('.dropdown-content');
+
+        userMenu.addEventListener('click', (event) => {
+            event.stopPropagation();
+            dropdownContent.classList.toggle('dropdown-active');
+        });
+
+        window.addEventListener('click', (event) => {
+            if (!userMenu.contains(event.target)) {
+                dropdownContent.classList.remove('dropdown-active');
+            }
+        });
+
+        const authModal = document.getElementById('auth-modal');
+        const signinLink = document.getElementById('signin-link');
+        const signupLink = document.getElementById('signup-link');
+
+        signinLink.addEventListener('click', (e) => {
+            e.preventDefault();
+            showForm('login');
+            authModal.style.display = 'flex';
+        });
+
+        signupLink.addEventListener('click', (e) => {
+            e.preventDefault();
+            showForm('register');
+            authModal.style.display = 'flex';
+        });
+
+        authModal.addEventListener('click', (e) => {
+            if (e.target === authModal) {
+                authModal.style.display = 'none';
+            }
+        });
 
         function showForm(formName) { /* Unchanged */
             if (formName === 'login') {
