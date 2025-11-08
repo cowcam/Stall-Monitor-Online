@@ -239,11 +239,8 @@
         }
 
         @media (max-width: 768px) {
-            .feature-item {
-                flex-direction: column-reverse; /* Text above image for default */
-            }
-            .feature-item.reverse {
-                flex-direction: column; /* Text above image for reversed */
+            .feature-item, .feature-item.reverse {
+                flex-direction: column-reverse; /* Text above image for all items */
             }
         }
     </style>
