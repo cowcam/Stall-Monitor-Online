@@ -66,9 +66,17 @@
             box-sizing: border-box;
             display: flex;
             align-items: center;
-            /* This is the changed property to align header content to the left */
             justify-content: flex-start;
             border-bottom: 1px solid var(--border-color);
+            flex-wrap: wrap; /* Allow items to wrap on smaller screens */
+        }
+
+        .tagline-header {
+            font-size: 1.2em; /* Slightly smaller than original tagline */
+            font-weight: 300;
+            color: var(--text-color);
+            opacity: 0.9;
+            margin: 0 20px; /* Add some horizontal margin */
         }
 
         .header img {
@@ -88,13 +96,7 @@
             margin: 0 auto;
         }
 
-        .tagline {
-            font-size: 1.5em;
-            font-weight: 300;
-            color: var(--text-color);
-            opacity: 0.9;
-            margin-bottom: 40px;
-        }
+
 
         .video-container {
             width: 100%;
@@ -237,8 +239,11 @@
         }
 
         @media (max-width: 768px) {
-            .feature-item, .feature-item.reverse {
-                flex-direction: column;
+            .feature-item {
+                flex-direction: column-reverse; /* Text above image for default */
+            }
+            .feature-item.reverse {
+                flex-direction: column; /* Text above image for reversed */
             }
         }
     </style>
@@ -248,6 +253,7 @@
     <header class="header">
         <img src="/assets/stallmonitor.png" alt="Stall Monitor Logo">
         <h1>Stall Monitor</h1>
+        <h2 class="tagline-header">24/7 Cow Behaviour Analysis</h2>
         <div class="user-menu">
             <i class="fas fa-user-circle"></i>
             <div class="dropdown-content">
@@ -258,7 +264,6 @@
     </header>
 
     <div class="main-content">
-        <h2 class="tagline">24/7 Cow Behaviour Analysis</h2>
 
         <section class="feature-grid">
             <div class="feature-item">
