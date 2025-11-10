@@ -63,11 +63,10 @@
         }
 
         .tagline-header {
-            font-size: 1.2em; /* Slightly smaller than original tagline */
-            font-weight: 300;
+            font-size: 1.8em; /* Matched feature-description h3 */
+            font-weight: 500; /* Matched feature-description h3 */
             color: var(--text-color);
-            opacity: 0.9;
-            margin: 0 20px; /* Add some horizontal margin */
+            /* Removed opacity and margin to match feature-description h3 */
         }
 
         .header img {
