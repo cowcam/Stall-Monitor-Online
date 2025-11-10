@@ -66,6 +66,7 @@
             font-size: 1.8em; /* Matched feature-description h3 */
             font-weight: 500; /* Matched feature-description h3 */
             color: var(--text-color);
+            margin-left: 20px;
             /* Removed opacity and margin to match feature-description h3 */
         }
 

@@ -11,6 +11,15 @@
     <header class="header">
         <img src="/assets/stallmonitor.png" alt="Stall Monitor Logo">
         <h1>Stall Monitor</h1>
+        <h3 class="tagline-header">24/7 Cow Behaviour Analysis</h3>
+        <div class="user-menu">
+            <i class="fas fa-user-circle"></i>
+            <div class="dropdown-content">
+                <a href="/index.html">Sign In</a>
+                <a href="/index.html">Sign Up</a>
+                <a href="/cancel.html">Unsubscribe</a>
+            </div>
+        </div>
     </header>
 
     <div class="main-content">
@@ -29,6 +38,21 @@
     </div>
 
     <script>
+        const userMenu = document.querySelector('.user-menu');
+        const dropdownContent = document.querySelector('.dropdown-content');
+
+        if (userMenu && dropdownContent) { // Check if elements exist
+            userMenu.addEventListener('click', (event) => {
+                event.stopPropagation();
+                dropdownContent.classList.toggle('dropdown-active');
+            });
+
+            window.addEventListener('click', (event) => {
+                if (!userMenu.contains(event.target)) {
+                    dropdownContent.classList.remove('dropdown-active');
+                }
+            });
+        }
         const WORKER_URL = 'https://my-backend.stallmonitor.workers.dev';
         const cancelForm = document.getElementById('cancel-form');
         const emailInput = document.getElementById('cancel-email');
