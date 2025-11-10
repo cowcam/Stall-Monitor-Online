@@ -181,7 +181,49 @@ app.post('/api/create-checkout-session', async (c) => {
 
 // --- REMOVED /api/set-farm-name endpoint ---
 
-// --- Handle POST for /webhook (NEW) ---
+// --- Handle POST for /api/cancel-subscription (NEW) ---
+app.post('/api/cancel-subscription', async (c) => {
+  try {
+    const { email } = await c.req.json<{ email: string }>();
+    if (!email) {
+      return c.json({ error: 'Email is required' }, 400);
+    }
+
+    console.log(`Cancellation request for email: ${email}`);
+
+    // 1. Find the user and their subscription ID
+    const user = await c.env.DB.prepare(
+      'SELECT stripe_subscription_id FROM users WHERE email = ?'
+    ).bind(email).first<{ stripe_subscription_id: string }>();
+
+    if (!user || !user.stripe_subscription_id) {
+      return c.json({ error: 'Active subscription not found for this email.' }, 404);
+    }
+
+    // 2. Initialize Stripe and cancel the subscription
+    const stripe = new Stripe(c.env.STRIPE_API_KEY);
+    await stripe.subscriptions.update(user.stripe_subscription_id, {
+      cancel_at_period_end: true,
+    });
+
+    console.log(`Subscription ${user.stripe_subscription_id} for ${email} scheduled for cancellation.`);
+
+    // 3. The webhook will handle the DB update when the subscription is officially canceled.
+    // We can optionally update the status to 'canceling' here if we want.
+    await c.env.DB.prepare(
+      'UPDATE users SET stripe_subscription_status = ? WHERE email = ?'
+    ).bind('canceling', email).run();
+
+
+    return c.json({ message: 'Your subscription has been scheduled for cancellation at the end of the current billing period.' });
+
+  } catch (e: any) {
+    console.error("--- ERROR IN /api/cancel-subscription ---", e);
+    return c.json({ error: 'Error canceling subscription: ' + (e instanceof Error ? e.message : String(e)) }, 500);
+  }
+});
+
+// --- Handle POST for /webhook (EXPANDED) ---
 app.post('/webhook', async (c) => {
   const stripe = new Stripe(c.env.STRIPE_API_KEY);
   const signature = c.req.header('stripe-signature');
@@ -194,21 +236,52 @@ app.post('/webhook', async (c) => {
       c.env.STRIPE_WEBHOOK_SECRET
     );
 
-    if (event.type === 'checkout.session.completed') {
-      const session = event.data.object as Stripe.Checkout.Session;
-      const customerEmail = session.customer_email;
-      const subscriptionId = session.subscription;
+    let subscription: Stripe.Subscription;
+    let customerEmail: string | null;
 
-      // Update the user's subscription information in the database
-      await c.env.DB.prepare(
-        'UPDATE users SET stripe_subscription_id = ?, stripe_subscription_status = ? WHERE email = ?'
-      ).bind(subscriptionId, 'active', customerEmail).run();
+    switch (event.type) {
+      case 'checkout.session.completed':
+        const session = event.data.object as Stripe.Checkout.Session;
+        customerEmail = session.customer_email;
+        if (session.subscription && customerEmail) {
+          await c.env.DB.prepare(
+            'UPDATE users SET stripe_subscription_id = ?, stripe_subscription_status = ? WHERE email = ?'
+          ).bind(session.subscription, 'active', customerEmail).run();
+          console.log(`Webhook: Activated subscription for ${customerEmail}`);
+        }
+        break;
+
+      case 'customer.subscription.updated':
+        subscription = event.data.object as Stripe.Subscription;
+        // The customer ID is on the subscription object
+        const customer = await stripe.customers.retrieve(subscription.customer as string) as Stripe.Customer;
+        customerEmail = customer.email;
+        if (customerEmail) {
+            const newStatus = subscription.cancel_at_period_end ? 'canceling' : subscription.status;
+            await c.env.DB.prepare(
+                'UPDATE users SET stripe_subscription_status = ? WHERE stripe_subscription_id = ?'
+            ).bind(newStatus, subscription.id).run();
+            console.log(`Webhook: Updated subscription for ${customerEmail} to status ${newStatus}`);
+        }
+        break;
+
+      case 'customer.subscription.deleted':
+        subscription = event.data.object as Stripe.Subscription;
+        // When a subscription is deleted, its status is 'canceled'.
+        await c.env.DB.prepare(
+          'UPDATE users SET stripe_subscription_status = ? WHERE stripe_subscription_id = ?'
+        ).bind('canceled', subscription.id).run();
+        console.log(`Webhook: Canceled subscription ${subscription.id}`);
+        break;
+        
+      default:
+        console.log(`Webhook: Unhandled event type ${event.type}`);
     }
 
     return c.json({ received: true });
   } catch (e: any) {
     console.error("--- ERROR IN /webhook ---", e);
-    return c.json({ error: 'Error processing webhook: ' + (e instanceof Error ? e.message : String(e)) }, 500);
+    return c.json({ error: 'Error processing webhook: ' + (e instanceof Error ? e.message : String(e)) }, 400); // Use 400 for webhook errors
   }
 });
 
