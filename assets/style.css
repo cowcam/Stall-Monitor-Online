@@ -84,7 +84,7 @@
         /* --- Hero Section Styles --- */
         .hero-container {
             background: var(--bg-color); /* Or a very subtle gradient */
-            padding: 80px 20px;
+            padding: 80px 20px 20px;
             text-align: center;
         }
 
