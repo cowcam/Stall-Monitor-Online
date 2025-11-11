@@ -14,4 +14,7 @@ prompt.txt
 
 /models
 
-/train!assets/style.css
+/train
+/assets/
+!/assets/style.css
+
