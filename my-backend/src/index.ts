@@ -5,6 +5,7 @@ export interface Env {
   DB: D1Database;
   STRIPE_API_KEY: string;
   STRIPE_WEBHOOK_SECRET: string;
+  MAILCHANNELS_API_KEY: string;
 }
 
 // --- Crypto Helper Functions (Unchanged) ---
@@ -237,10 +238,42 @@ app.post('/api/contact', async (c) => {
     console.log(`Message: ${message}`);
     console.log('-----------------------------');
 
-    // In a real application, you would send an email here.
-    // For this example, we'll just return a success message.
+    const SENDER_EMAIL = 'contact@stallmonitor.com'; // Replace with your sender email
+    const MAILCHANNELS_API_KEY = c.env.MAILCHANNELS_API_KEY; // Assuming you set this in your Worker secrets
 
-    return c.json({ message: 'Message received successfully!' });
+    const mailPayload = {
+      personalizations: [{ to: [{ email: SENDER_EMAIL }] }],
+      from: { email: SENDER_EMAIL, name: 'Stall Monitor Contact Form' },
+      subject: `New Contact Form Submission from ${name}`,
+      content: [{
+        type: 'text/plain',
+        value: `Name: ${name}\nEmail: ${email}\nMessage: ${message}`,
+      }],
+    };
+
+    try {
+      const mailResponse = await fetch('https://api.mailchannels.net/tx/v1/send', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+          'Authorization': `Bearer ${MAILCHANNELS_API_KEY}`, // MailChannels might require an API key for this endpoint
+        },
+        body: JSON.stringify(mailPayload),
+      });
+
+      if (!mailResponse.ok) {
+        const errorText = await mailResponse.text();
+        console.error('MailChannels API error:', mailResponse.status, errorText);
+        return c.json({ error: 'Failed to send email via MailChannels.' }, 500);
+      }
+
+      console.log('Email sent successfully via MailChannels.');
+      return c.json({ message: 'Message received successfully and email sent!' });
+
+    } catch (mailError) {
+      console.error('Error sending email via MailChannels:', mailError);
+      return c.json({ error: 'Error sending email.' }, 500);
+    }
 
   } catch (e: any) {
     console.error("--- ERROR IN /api/contact ---", e);
