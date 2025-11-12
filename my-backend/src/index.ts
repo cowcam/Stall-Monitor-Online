@@ -5,7 +5,7 @@ export interface Env {
   DB: D1Database;
   STRIPE_API_KEY: string;
   STRIPE_WEBHOOK_SECRET: string;
-  MAILCHANNELS_API_KEY: string;
+  RESEND_API_KEY: string;
 }
 
 // --- Crypto Helper Functions (Unchanged) ---
@@ -239,39 +239,36 @@ app.post('/api/contact', async (c) => {
     console.log('-----------------------------');
 
     const SENDER_EMAIL = 'contact@stallmonitor.com'; // Replace with your sender email
-    const MAILCHANNELS_API_KEY = c.env.MAILCHANNELS_API_KEY; // Assuming you set this in your Worker secrets
+    const RESEND_API_KEY = c.env.RESEND_API_KEY; // Assuming you set this in your Worker secrets
 
     const mailPayload = {
-      personalizations: [{ to: [{ email: SENDER_EMAIL }] }],
-      from: { email: SENDER_EMAIL, name: 'Stall Monitor Contact Form' },
+      from: `Stall Monitor Contact Form <${SENDER_EMAIL}>`,
+      to: SENDER_EMAIL,
       subject: `New Contact Form Submission from ${name}`,
-      content: [{
-        type: 'text/plain',
-        value: `Name: ${name}\nEmail: ${email}\nMessage: ${message}`,
-      }],
+      text: `Name: ${name}\nEmail: ${email}\nMessage: ${message}`,
     };
 
     try {
-      const mailResponse = await fetch('https://api.mailchannels.net/tx/v1/send', {
+      const mailResponse = await fetch('https://api.resend.com/emails', {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
-          'Authorization': `Bearer ${MAILCHANNELS_API_KEY}`, // MailChannels might require an API key for this endpoint
+          'Authorization': `Bearer ${RESEND_API_KEY}`,
         },
         body: JSON.stringify(mailPayload),
       });
 
       if (!mailResponse.ok) {
         const errorText = await mailResponse.text();
-        console.error('MailChannels API error:', mailResponse.status, errorText);
-        return c.json({ error: 'Failed to send email via MailChannels.' }, 500);
+        console.error('Resend API error:', mailResponse.status, errorText);
+        return c.json({ error: 'Failed to send email via Resend.' }, 500);
       }
 
-      console.log('Email sent successfully via MailChannels.');
+      console.log('Email sent successfully via Resend.');
       return c.json({ message: 'Message received successfully and email sent!' });
 
     } catch (mailError) {
-      console.error('Error sending email via MailChannels:', mailError);
+      console.error('Error sending email via Resend:', mailError);
       return c.json({ error: 'Error sending email.' }, 500);
     }
 

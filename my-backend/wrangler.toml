@@ -6,7 +6,7 @@ compatibility_date = "2023-07-24"
 DB = "DB"
 STRIPE_API_KEY = "STRIPE_API_KEY"
 STRIPE_WEBHOOK_SECRET = "STRIPE_WEBHOOK_SECRET"
-MAILCHANNELS_API_KEY = "MAILCHANNELS_API_KEY"
+RESEND_API_KEY = "RESEND_API_KEY"
 
 [[routes]]
 pattern = "my-backend.stallmonitor.workers.dev/*"
