@@ -222,5 +222,28 @@
             }
         });
     </script>
+    <footer class="footer">
+        <div class="footer-content">
+            <p>&copy; 2025 Stall Monitor. All rights reserved.</p>
+            <nav class="footer-links">
+                <a href="/index.html">Home</a>
+                <a href="/cancel.html">Unsubscribe</a>
+                <a href="#" id="contact-link">Contact</a>
+                </nav>
+        </div>
+    </footer>
+
+    <script>
+        // Anti-spam contact link
+        const contactLink = document.getElementById('contact-link');
+        if (contactLink) {
+            contactLink.addEventListener('click', function(event) {
+                event.preventDefault();
+                const user = 'info';
+                const domain = 'stallmonitor.com';
+                window.location.href = 'mailto:' + user + '@' + domain;
+            });
+        }
+    </script>
 </body>
 </html>

@@ -223,6 +223,32 @@ app.post('/api/cancel-subscription', async (c) => {
   }
 });
 
+// --- Handle POST for /api/contact (NEW) ---
+app.post('/api/contact', async (c) => {
+  try {
+    const { name, email, message } = await c.req.json<{ name: string; email: string; message: string }>();
+    if (!name || !email || !message) {
+      return c.json({ error: 'Name, email, and message are required' }, 400);
+    }
+
+    console.log('--- CONTACT FORM SUBMISSION ---');
+    console.log(`Name: ${name}`);
+    console.log(`Email: ${email}`);
+    console.log(`Message: ${message}`);
+    console.log('-----------------------------');
+
+    // In a real application, you would send an email here.
+    // For this example, we'll just return a success message.
+
+    return c.json({ message: 'Message received successfully!' });
+
+  } catch (e: any) {
+    console.error("--- ERROR IN /api/contact ---", e);
+    return c.json({ error: 'Error processing contact form: ' + (e instanceof Error ? e.message : String(e)) }, 500);
+  }
+});
+
+
 // --- Handle POST for /webhook (EXPANDED) ---
 app.post('/webhook', async (c) => {
   const stripe = new Stripe(c.env.STRIPE_API_KEY);

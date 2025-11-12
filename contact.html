@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Cancel Subscription - Stall Monitor</title>
+    <title>Contact Us - Stall Monitor</title>
     <link rel="icon" href="/assets/stallmonitor.png" type="image/png">
     
     <link rel="preconnect" href="https://fonts.googleapis.com">
@@ -30,65 +30,60 @@
 
     <div class="main-content">
         <div class="form-container">
-            <h2>Cancel Subscription</h2>
-            <p>We're sorry to see you go. Please enter your email address to confirm cancellation. Your subscription will remain active until the end of your current billing period.</p>
-            <form id="cancel-form">
+            <h2>Contact Us</h2>
+            <p>Have a question or need support? Fill out the form below and we'll get back to you as soon as possible.</p>
+            <form id="contact-form">
                 <div class="form-group">
-                    <label for="cancel-email">Email Address</label>
-                    <input type="email" id="cancel-email" required>
+                    <label for="contact-name">Your Name</label>
+                    <input type="text" id="contact-name" required>
                 </div>
-                <button type="submit">Confirm Cancellation</button>
-                <p id="cancel-message" class="message"></p>
+                <div class="form-group">
+                    <label for="contact-email">Your Email</label>
+                    <input type="email" id="contact-email" required>
+                </div>
+                <div class="form-group">
+                    <label for="contact-message">Message</label>
+                    <textarea id="contact-message" rows="5" required></textarea>
+                </div>
+                <button type="submit">Send Message</button>
+                <p id="contact-form-message" class="message"></p>
             </form>
         </div>
     </div>
 
     <script>
-        const userMenu = document.querySelector('.user-menu');
-        const dropdownContent = document.querySelector('.dropdown-content');
-
-        if (userMenu && dropdownContent) { // Check if elements exist
-            userMenu.addEventListener('click', (event) => {
-                event.stopPropagation();
-                dropdownContent.classList.toggle('dropdown-active');
-            });
-
-            window.addEventListener('click', (event) => {
-                if (!userMenu.contains(event.target)) {
-                    dropdownContent.classList.remove('dropdown-active');
-                }
-            });
-        }
         const WORKER_URL = 'https://my-backend.stallmonitor.workers.dev';
-        const cancelForm = document.getElementById('cancel-form');
-        const emailInput = document.getElementById('cancel-email');
-        const messageArea = document.getElementById('cancel-message');
+        const contactForm = document.getElementById('contact-form');
+        const messageArea = document.getElementById('contact-form-message');
 
-        cancelForm.addEventListener('submit', async (event) => {
+        contactForm.addEventListener('submit', async (event) => {
             event.preventDefault();
-            messageArea.textContent = 'Processing...';
+            messageArea.textContent = 'Sending...';
             messageArea.className = 'message';
 
-            const email = emailInput.value;
+            const name = document.getElementById('contact-name').value;
+            const email = document.getElementById('contact-email').value;
+            const message = document.getElementById('contact-message').value;
 
             try {
-                const response = await fetch(`${WORKER_URL}/api/cancel-subscription`, {
+                const response = await fetch(`${WORKER_URL}/api/contact`, {
                     method: 'POST',
                     headers: { 'Content-Type': 'application/json' },
-                    body: JSON.stringify({ email: email })
+                    body: JSON.stringify({ name, email, message })
                 });
 
                 const data = await response.json();
 
                 if (response.ok) {
-                    messageArea.textContent = data.message;
+                    messageArea.textContent = 'Message sent successfully!';
                     messageArea.classList.add('success');
+                    contactForm.reset();
                 } else {
                     messageArea.textContent = data.error || 'An unknown error occurred.';
                     messageArea.classList.add('error');
                 }
             } catch (error) {
-                console.error('Cancellation fetch failed:', error);
+                console.error('Contact form fetch failed:', error);
                 messageArea.textContent = 'Could not connect to the server.';
                 messageArea.classList.add('error');
             }
