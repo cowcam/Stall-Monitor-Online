@@ -3,7 +3,6 @@ main = "src/index.ts"
 compatibility_date = "2023-07-24"
 
 [vars]
-DB = "DB"
 STRIPE_API_KEY = "STRIPE_API_KEY"
 STRIPE_WEBHOOK_SECRET = "STRIPE_WEBHOOK_SECRET"
 RESEND_API_KEY = "RESEND_API_KEY"
@@ -13,7 +12,7 @@ JWT_SECRET = "JWT_SECRET"
 pattern = "my-backend.stallmonitor.workers.dev/*"
 zone_name = "stallmonitor.com"
 
-[[d1_databases]]
-binding = "DB" # i.e. available in your Worker on env.DB
+[d1]
+binding = "DB"
 database_name = "my-guestbook-db"
 database_id = "86e92860-08ef-4e6d-9513-e6ed5a9e04b3"
