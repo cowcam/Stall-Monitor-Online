@@ -185,6 +185,8 @@ app.post('/api/create-checkout-session', async (c) => {
 // --- Handle POST for /api/cancel-subscription (NEW) ---
 app.post('/api/cancel-subscription', async (c) => {
   try {
+    // TODO: Implement proper session management/authentication to get the user's email
+    // instead of relying on the email from the request body.
     const { email } = await c.req.json<{ email: string }>();
     if (!email) {
       return c.json({ error: 'Email is required' }, 400);

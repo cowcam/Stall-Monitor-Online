@@ -22,7 +22,8 @@
             <div class="dropdown-content">
                 <a href="#" id="signin-link">Sign In</a>
                 <a href="#" id="signup-link">Sign Up</a>
-                <a href="/cancel.html">Unsubscribe</a>
+                <a href="/cancel.html" id="unsubscribe-link" style="display: none;">Unsubscribe</a>
+                <a href="#" id="signout-link" style="display: none;">Sign Out</a>
             </div>
         </div>
     </header>
@@ -151,9 +152,34 @@
         const tabButtons = document.querySelectorAll('.tab-button');
         let registeredEmail = null; // Still used for Stripe modal
 
-        // --- Check for Remember Me on page load ---
         // --- Check for Remember Me on page load (UPDATED) ---
         document.addEventListener('DOMContentLoaded', () => {
+            const signinLink = document.getElementById('signin-link');
+            const signupLink = document.getElementById('signup-link');
+            const unsubscribeLink = document.getElementById('unsubscribe-link');
+            const signoutLink = document.getElementById('signout-link');
+
+            const loggedInUser = localStorage.getItem('loggedInUser');
+
+            if (loggedInUser) {
+                signinLink.style.display = 'none';
+                signupLink.style.display = 'none';
+                unsubscribeLink.style.display = 'block';
+                signoutLink.style.display = 'block';
+            } else {
+                signinLink.style.display = 'block';
+                signupLink.style.display = 'block';
+                unsubscribeLink.style.display = 'none';
+                signoutLink.style.display = 'none';
+            }
+
+            signoutLink.addEventListener('click', (e) => {
+                e.preventDefault();
+                localStorage.removeItem('loggedInUser');
+                localStorage.removeItem('stallMonitorRememberedUser');
+                window.location.reload();
+            });
+
             // --- ADD this check ---
             // If the current path already looks like a farm name, DON'T auto-redirect
             const currentPath = window.location.pathname;
@@ -178,8 +204,6 @@
                     }
                 }
             } // <-- Close the 'else' block for the path check
-
-
         });
 
 
@@ -270,8 +294,10 @@
                     const farmName = data.farm_name;
                     const userEmail = data.email;
 
+                    const userData = JSON.stringify({ farmName: farmName, email: userEmail });
+                    localStorage.setItem('loggedInUser', userData);
+
                     if (rememberMe) {
-                        const userData = JSON.stringify({ farmName: farmName, email: userEmail });
                         localStorage.setItem('stallMonitorRememberedUser', userData);
                     } else {
                         localStorage.removeItem('stallMonitorRememberedUser');
