@@ -15,5 +15,5 @@ zone_name = "stallmonitor.com"
 
 [[d1_databases]]
 binding = "DB" # i.e. available in your Worker on env.DB
-database_name = "stall-monitor-db"
-database_id = "<your-database-id>"
+database_name = "my-guestbook-db"
+database_id = "86e92860-08ef-4e6d-9513-e6ed5a9e04b3"
