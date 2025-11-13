@@ -293,8 +293,9 @@
                 if (response.ok) {
                     const farmName = data.farm_name;
                     const userEmail = data.email;
+                    const token = data.token;
 
-                    const userData = JSON.stringify({ farmName: farmName, email: userEmail });
+                    const userData = JSON.stringify({ farmName: farmName, email: userEmail, token: token });
                     localStorage.setItem('loggedInUser', userData);
 
                     if (rememberMe) {

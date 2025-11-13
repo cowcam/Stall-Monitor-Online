@@ -1,11 +1,13 @@
 import { Hono } from 'hono';
 import Stripe from 'stripe';
+import jwt from '@tsndr/cloudflare-worker-jwt';
 
 export interface Env {
   DB: D1Database;
   STRIPE_API_KEY: string;
   STRIPE_WEBHOOK_SECRET: string;
   RESEND_API_KEY: string;
+  JWT_SECRET: string;
 }
 
 // --- Crypto Helper Functions (Unchanged) ---
@@ -40,7 +42,7 @@ app.use('*', async (c, next) => {
       return new Response(null, { status: 204, headers: { /* CORS Headers */
         'Access-Control-Allow-Origin': origin,
         'Access-Control-Allow-Methods': 'POST, GET, OPTIONS',
-        'Access-Control-Allow-Headers': 'Content-Type',
+        'Access-Control-Allow-Headers': 'Content-Type, Authorization',
         'Access-Control-Max-Age': '86400',
        }});
     } else { return new Response('Forbidden - Invalid Origin', { status: 403 }); }
@@ -48,6 +50,25 @@ app.use('*', async (c, next) => {
   await next();
   if (origin && allowedOrigins.includes(origin) && c.res) { c.res.headers.set('Access-Control-Allow-Origin', origin); }
 });
+
+// --- JWT Verification Middleware ---
+const authMiddleware = async (c: any, next: any) => {
+  const authHeader = c.req.header('Authorization');
+  if (!authHeader || !authHeader.startsWith('Bearer ')) {
+    return c.json({ error: 'Unauthorized' }, 401);
+  }
+  const token = authHeader.substring(7);
+  try {
+    const decoded = await jwt.verify(token, c.env.JWT_SECRET);
+    if (!decoded) {
+      return c.json({ error: 'Unauthorized' }, 401);
+    }
+    c.set('user', decoded);
+    await next();
+  } catch (e) {
+    return c.json({ error: 'Unauthorized' }, 401);
+  }
+};
 
 // --- Handle POST for /register (UPDATED) ---
 // Now accepts and saves farm_name
@@ -126,8 +147,14 @@ app.post('/login', async (c) => {
     console.log(`Provided Hash: ${providedHash}`);
 
     if (providedHash === storedHash) {
-      // SUCCESS! Return email AND farm_name
-      return c.json({ email: user.email, farm_name: user.farm_name, message: 'Login successful!' }, 200, corsHeader);
+      // SUCCESS! Generate JWT
+      const token = await jwt.sign({
+        email: user.email,
+        farm_name: user.farm_name,
+        exp: Math.floor(Date.now() / 1000) + (60 * 60 * 24 * 7) // 7 days
+      }, c.env.JWT_SECRET);
+
+      return c.json({ email: user.email, farm_name: user.farm_name, token: token, message: 'Login successful!' }, 200, corsHeader);
     } else {
       // Password mismatch
       console.log('Password mismatch');
@@ -183,13 +210,13 @@ app.post('/api/create-checkout-session', async (c) => {
 // --- REMOVED /api/set-farm-name endpoint ---
 
 // --- Handle POST for /api/cancel-subscription (NEW) ---
-app.post('/api/cancel-subscription', async (c) => {
+app.post('/api/cancel-subscription', authMiddleware, async (c) => {
   try {
-    // TODO: Implement proper session management/authentication to get the user's email
-    // instead of relying on the email from the request body.
-    const { email } = await c.req.json<{ email: string }>();
+    const user = c.get('user');
+    const email = user.email;
+
     if (!email) {
-      return c.json({ error: 'Email is required' }, 400);
+      return c.json({ error: 'Email not found in token' }, 400);
     }
 
     console.log(`Cancellation request for email: ${email}`);

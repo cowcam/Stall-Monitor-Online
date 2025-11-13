@@ -73,13 +73,15 @@
                 messageArea.className = 'message';
 
                 const user = JSON.parse(loggedInUser);
-                const email = user.email;
+                const token = user.token;
 
                 try {
                     const response = await fetch(`${WORKER_URL}/api/cancel-subscription`, {
                         method: 'POST',
-                        headers: { 'Content-Type': 'application/json' },
-                        body: JSON.stringify({ email: email })
+                        headers: {
+                            'Content-Type': 'application/json',
+                            'Authorization': `Bearer ${token}`
+                        }
                     });
 
                     const data = await response.json();

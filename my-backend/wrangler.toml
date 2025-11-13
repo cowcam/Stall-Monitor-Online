@@ -7,6 +7,7 @@ DB = "DB"
 STRIPE_API_KEY = "STRIPE_API_KEY"
 STRIPE_WEBHOOK_SECRET = "STRIPE_WEBHOOK_SECRET"
 RESEND_API_KEY = "RESEND_API_KEY"
+JWT_SECRET = "JWT_SECRET"
 
 [[routes]]
 pattern = "my-backend.stallmonitor.workers.dev/*"
