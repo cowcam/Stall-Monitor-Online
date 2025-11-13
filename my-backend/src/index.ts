@@ -212,8 +212,8 @@ app.post('/api/create-checkout-session', async (c) => {
 // --- Handle POST for /api/cancel-subscription (NEW) ---
 app.post('/api/cancel-subscription', authMiddleware, async (c) => {
   try {
-    const user = c.get('user');
-    const email = user.email;
+    const userFromToken = c.get('user');
+    const email = userFromToken.email;
 
     if (!email) {
       return c.json({ error: 'Email not found in token' }, 400);
@@ -222,21 +222,21 @@ app.post('/api/cancel-subscription', authMiddleware, async (c) => {
     console.log(`Cancellation request for email: ${email}`);
 
     // 1. Find the user and their subscription ID
-    const user = await c.env.DB.prepare(
+    const dbUser = await c.env.DB.prepare(
       'SELECT stripe_subscription_id FROM users WHERE email = ?'
     ).bind(email).first<{ stripe_subscription_id: string }>();
 
-    if (!user || !user.stripe_subscription_id) {
+    if (!dbUser || !dbUser.stripe_subscription_id) {
       return c.json({ error: 'Active subscription not found for this email.' }, 404);
     }
 
     // 2. Initialize Stripe and cancel the subscription
     const stripe = new Stripe(c.env.STRIPE_API_KEY);
-    await stripe.subscriptions.update(user.stripe_subscription_id, {
+    await stripe.subscriptions.update(dbUser.stripe_subscription_id, {
       cancel_at_period_end: true,
     });
 
-    console.log(`Subscription ${user.stripe_subscription_id} for ${email} scheduled for cancellation.`);
+    console.log(`Subscription ${dbUser.stripe_subscription_id} for ${email} scheduled for cancellation.`);
 
     // 3. The webhook will handle the DB update when the subscription is officially canceled.
     // We can optionally update the status to 'canceling' here if we want.
