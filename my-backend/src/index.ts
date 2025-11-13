@@ -415,16 +415,5 @@ app.notFound((c) => {
   return c.json({ error: 'Not Found' }, 404); // Middleware adds CORS
 });
 
-app.get('/debug', async (c) => {
-  const env = {
-    DB: c.env.DB ? 'present' : 'missing',
-    STRIPE_API_KEY: c.env.STRIPE_API_KEY ? 'present' : 'missing',
-    STRIPE_WEBHOOK_SECRET: c.env.STRIPE_WEBHOOK_SECRET ? 'present' : 'missing',
-    RESEND_API_KEY: c.env.RESEND_API_KEY ? 'present' : 'missing',
-    JWT_SECRET: c.env.JWT_SECRET ? 'present' : 'missing',
-  };
-  return c.json(env);
-});
-
 export default app;
 // <-- FIX: REMOVED EXTRA '}' FROM END OF FILE
