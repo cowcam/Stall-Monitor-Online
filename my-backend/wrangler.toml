@@ -8,9 +8,6 @@ STRIPE_WEBHOOK_SECRET = "STRIPE_WEBHOOK_SECRET"
 RESEND_API_KEY = "RESEND_API_KEY"
 JWT_SECRET = "JWT_SECRET"
 
-[[routes]]
-pattern = "my-backend.stallmonitor.workers.dev/*"
-zone_name = "stallmonitor.com"
 
 [[d1_databases]]
 binding = "DB"
