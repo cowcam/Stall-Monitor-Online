@@ -2,11 +2,6 @@ name = "my-backend"
 main = "src/index.ts"
 compatibility_date = "2023-07-24"
 
-[vars]
-STRIPE_API_KEY = "STRIPE_API_KEY"
-STRIPE_WEBHOOK_SECRET = "STRIPE_WEBHOOK_SECRET"
-RESEND_API_KEY = "RESEND_API_KEY"
-JWT_SECRET = "JWT_SECRET"
 
 
 [[d1_databases]]
