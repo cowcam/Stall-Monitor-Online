@@ -211,8 +211,23 @@
         
         .form-group { margin-bottom: 20px; text-align: left; }
         label { display: block; margin-bottom: 8px; font-size: 0.9em; opacity: 0.8; }
-        input { width: 100%; padding: 12px; background-color: var(--bg-color); border: 1px solid var(--border-color); border-radius: 6px; color: var(--text-color); font-size: 1em; box-sizing: border-box; }
-        input:focus { outline: none; border-color: var(--text-color); }
+        /* Updated to include textarea */
+        input, textarea { 
+            width: 100%; 
+            padding: 12px; 
+            background-color: var(--bg-color); 
+            border: 1px solid var(--border-color); 
+            border-radius: 6px; 
+            color: var(--text-color); 
+            font-size: 1em; 
+            box-sizing: border-box; 
+            font-family: inherit; /* Ensures textarea uses the same font */
+        }
+
+        input:focus, textarea:focus { 
+            outline: none; 
+            border-color: var(--text-color); 
+        }
         button[type="submit"] { width: 100%; padding: 14px; border: none; border-radius: 6px; background-color: var(--text-color); color: var(--bg-color); font-size: 1.1em; font-weight: bold; cursor: pointer; margin-top: 10px; }
         .message { margin-top: 20px; font-weight: 500; min-height: 1em; }
         .success { color: var(--success-color); }
