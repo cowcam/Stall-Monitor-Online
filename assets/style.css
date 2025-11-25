@@ -1,360 +1,431 @@
+/* --- Global Variables & Reset --- */
+:root {
+    --text-color: rgb(240, 227, 197);
+    --bg-color: rgb(36, 39, 48);
+    --card-color: rgb(56, 61, 79);
+    --border-color: #4a4f60;
+    --success-color: #4CAF50;
+    --error-color: #F44336;
+}
+
+body {
+    margin: 0;
+    font-family: 'Poppins', -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
+    background-color: var(--bg-color);
+    color: var(--text-color);
+    text-align: center;
+}
+
+/* --- Header & Navigation --- */
+.header {
+    width: 100%;
+    background-color: var(--bg-color);
+    padding: 15px 30px;
+    box-sizing: border-box;
+    display: flex;
+    align-items: center;
+    justify-content: flex-start;
+    border-bottom: 1px solid var(--border-color);
+    flex-wrap: wrap; 
+}
+
+.header img {
+    height: 50px;
+    margin-right: 20px;
+}
+
+.header h1 {
+    font-size: 1.8em;
+    margin: 0;
+    font-weight: 500;
+}
+
+.tagline-header {
+    font-size: 1.8em;
+    font-weight: 500;
+    color: var(--text-color);
+    margin-left: 20px;
+}
+
+/* User Menu & Dropdown */
 .user-menu {
-            position: relative;
-            margin-left: auto;
-        }/* Testing git */
+    position: relative;
+    margin-left: auto;
+}
 
-        .user-menu .fa-user-circle {
-            font-size: 2em;
-            cursor: pointer;
-        }
+.user-menu .fa-user-circle {
+    font-size: 2em;
+    cursor: pointer;
+}
 
-        .dropdown-content {
-            display: none;
-            position: absolute;
-            right: 0;
-            background-color: var(--card-color);
-            min-width: 160px;
-            box-shadow: 0px 8px 16px 0px rgba(0,0,0,0.2);
-            z-index: 1;
-        }
+.dropdown-content {
+    display: none;
+    position: absolute;
+    right: 0;
+    background-color: var(--card-color);
+    min-width: 160px;
+    box-shadow: 0px 8px 16px 0px rgba(0,0,0,0.2);
+    z-index: 100;
+    border-radius: 6px;
+    overflow: hidden;
+}
 
-        .dropdown-content a {
-            color: var(--text-color);
-            padding: 12px 16px;
-            text-decoration: none;
-            display: block;
-        }
+.dropdown-content a {
+    color: var(--text-color);
+    padding: 12px 16px;
+    text-decoration: none;
+    display: block;
+    text-align: left;
+}
 
-        .dropdown-content a:hover {
-            background-color: var(--bg-color);
-        }
+.dropdown-content a:hover {
+    background-color: var(--bg-color);
+}
 
-        .dropdown-content.dropdown-active {
-            display: block;
-        }
+.dropdown-content.dropdown-active {
+    display: block;
+}
 
-        :root {
-            --text-color: rgb(240, 227, 197);
-            --bg-color: rgb(36, 39, 48);
-            --card-color: rgb(56, 61, 79);
-            --border-color: #4a4f60;
-            --success-color: #4CAF50;
-            --error-color: #F44336;
-        }
+/* --- Hero Section --- */
+.hero-container {
+    background: var(--bg-color);
+    padding: 80px 20px 20px;
+    text-align: center;
+}
 
-        body {
-            margin: 0;
-            /* UPDATED FONT-FAMILY */
-            font-family: 'Poppins', -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
-            background-color: var(--bg-color);
-            color: var(--text-color);
-            text-align: center;
-        }
+.hero-content {
+    max-width: 800px;
+    margin: 0 auto;
+}
 
-        .header {
-            width: 100%;
-            background-color: var(--bg-color);
-            padding: 15px 30px;
-            box-sizing: border-box;
-            display: flex;
-            align-items: center;
-            justify-content: flex-start;
-            border-bottom: 1px solid var(--border-color);
-            flex-wrap: wrap; /* Allow items to wrap on smaller screens */
-        }
+.hero-content h1 {
+    font-size: 3em;
+    font-weight: 600;
+    color: var(--text-color);
+    margin: 0 0 20px 0;
+}
 
-        .tagline-header {
-            font-size: 1.8em; /* Matched feature-description h3 */
-            font-weight: 500; /* Matched feature-description h3 */
-            color: var(--text-color);
-            /* Removed opacity and margin to match feature-description h3 */
-        }
+.hero-subtext {
+    font-size: 1.2em;
+    opacity: 0.9;
+    line-height: 1.6;
+    margin-bottom: 40px;
+}
 
-        .header img {
-            height: 50px;
-            margin-right: 20px;
-        }
+.cta-button {
+    background-color: var(--text-color);
+    color: var(--bg-color);
+    font-size: 1.1em;
+    font-weight: bold;
+    padding: 15px 30px;
+    border: none;
+    border-radius: 6px;
+    cursor: pointer;
+    transition: transform 0.2s;
+    text-decoration: none; /* In case it's an <a> tag */
+    display: inline-block;
+}
 
-        .header h1 {
-            font-size: 1.8em;
-            margin: 0;
-            font-weight: 500;
-        }
+.cta-button:hover {
+    transform: scale(1.05);
+}
 
-        /* --- Hero Section Styles --- */
-        .hero-container {
-            background: var(--bg-color); /* Or a very subtle gradient */
-            padding: 80px 20px 20px;
-            text-align: center;
-        }
+/* --- Main Layout --- */
+.main-content {
+    padding: 40px 20px;
+    max-width: 1100px;
+    margin: 0 auto;
+}
 
-        .hero-content {
-            max-width: 800px;
-            margin: 0 auto;
-        }
+.video-container {
+    width: 100%;
+    max-width: 1100px;
+    margin: 60px auto 40px auto;
+    border-radius: 12px;
+    overflow: hidden;
+    border: 1px solid var(--border-color);
+    box-shadow: 0 8px 25px rgba(0, 0, 0, 0.3);
+}
 
-        .hero-content h1 {
-            font-size: 3em; /* Big and bold */
-            font-weight: 600;
-            color: var(--text-color);
-            margin: 0 0 20px 0;
-        }
+video {
+    width: 100%;
+    display: block;
+}
 
-        .hero-subtext {
-            font-size: 1.2em;
-            opacity: 0.9;
-            line-height: 1.6;
-            margin-bottom: 40px;
-        }
+/* --- Features Grid --- */
+.feature-grid {
+    display: flex;
+    flex-direction: column;
+    gap: 40px;
+    margin-top: 20px;
+}
 
-        .cta-button {
-            background-color: var(--text-color);
-            color: var(--bg-color);
-            font-size: 1.1em;
-            font-weight: bold;
-            padding: 15px 30px;
-            border: none;
-            border-radius: 6px;
-            cursor: pointer;
-            transition: transform 0.2s;
-        }
+.feature-item {
+    display: flex;
+    align-items: center;
+    gap: 30px;
+}
 
-        .cta-button:hover {
-            transform: scale(1.05);
-        }
+.feature-item.reverse {
+    flex-direction: row-reverse;
+}
 
-        .main-content {
-            padding: 40px 20px;
-            max-width: 1100px; /* <-- WIDENED LAYOUT */
-            margin: 0 auto;
-        }
+.feature-image {
+    flex: 2;
+}
 
+.feature-image img {
+    width: 100%;
+    border-radius: 8px;
+}
 
+.feature-description {
+    flex: 1;
+    text-align: center;
+}
 
-        .video-container {
-            width: 100%;
-            max-width: 1100px; /* <-- WIDENED LAYOUT */
-            margin: 60px auto 40px auto; /* Added margin-top */
-            border-radius: 12px;
-            overflow: hidden;
-            border: 1px solid var(--border-color);
-            box-shadow: 0 8px 25px rgba(0, 0, 0, 0.3);
-        }
+.feature-description h3 {
+    font-size: 1.8em;
+    font-weight: 500;
+    color: var(--text-color);
+}
 
-        video {
-            width: 100%;
-            display: block;
-        }
+/* --- Form Elements (Inputs & Textarea) --- */
+.form-container {
+    background-color: var(--card-color);
+    padding: 30px 40px;
+    border-radius: 12px;
+    border: 1px solid var(--border-color);
+    box-shadow: 0 4px 15px rgba(0, 0, 0, 0.2);
+    width: 100%;
+    max-width: 450px; /* Default narrow width for login */
+    text-align: center;
+    margin: 0 auto;
+}
 
-        .form-container {
-            background-color: var(--card-color);
-            padding: 30px 40px;
-            border-radius: 12px;
-            border: 1px solid var(--border-color);
-            box-shadow: 0 4px 15px rgba(0, 0, 0, 0.2);
-            width: 100%;
-            max-width: 450px;
-            text-align: center;
-            margin: 0 auto;
-        }
+.form-group { 
+    margin-bottom: 20px; 
+    text-align: left; 
+    width: 100%;
+}
 
-        .tab-buttons {
-            display: flex;
-            border-bottom: 1px solid var(--border-color);
-            margin-bottom: 30px;
-        }
+label { 
+    display: block; 
+    margin-bottom: 8px; 
+    font-size: 0.9em; 
+    opacity: 0.8; 
+}
 
-        .tab-button {
-            flex: 1;
-            padding: 15px;
-            border: none;
-            background: none;
-            color: var(--text-color);
-            font-size: 1.1em;
-            cursor: pointer;
-            opacity: 0.6;
-            border-bottom: 3px solid transparent;
-            transition: opacity 0.3s, border-color 0.3s;
-        }
+/* FIX: Applied to both input and textarea */
+input, textarea { 
+    width: 100%; 
+    padding: 12px; 
+    background-color: var(--bg-color); 
+    border: 1px solid var(--border-color); 
+    border-radius: 6px; 
+    color: var(--text-color); 
+    font-size: 1em; 
+    box-sizing: border-box; 
+    font-family: inherit;
+}
 
-        .tab-button.active {
-            opacity: 1;
-            border-bottom-color: var(--text-color);
-        }
+input:focus, textarea:focus { 
+    outline: none; 
+    border-color: var(--text-color); 
+}
 
-        .form-section {
-            display: none;
-        }
-        .checkbox-group {
-            display: flex;
-            align-items: center; /* Vertically align items */
-            justify-content: flex-start; /* Align items to the left */
-            gap: 5px; /* Add a small gap between checkbox and label */
-            margin-top: 15px;
-            margin-bottom: 20px; /* Add some space below */
-        }
-        .checkbox-group input[type="checkbox"] {
-            width: auto; /* Let checkbox size itself */
-            margin: 0; /* Remove default margins */
-            flex-shrink: 0; /* Prevent checkbox from shrinking */
-        }
-        .checkbox-group label {
-            margin-bottom: 0; /* Remove bottom margin from label */
-            white-space: nowrap; /* Prevent label text from wrapping */
-            flex-grow: 1; /* Allow label to take remaining space if needed */
-            text-align: left; /* Ensure label text is left-aligned */
-        }
+button[type="submit"] { 
+    width: 100%; 
+    padding: 14px; 
+    border: none; 
+    border-radius: 6px; 
+    background-color: var(--text-color); 
+    color: var(--bg-color); 
+    font-size: 1.1em; 
+    font-weight: bold; 
+    cursor: pointer; 
+    margin-top: 10px; 
+}
 
-        .form-section.active {
-            display: block;
-        }
-        
-        .form-group { margin-bottom: 20px; text-align: left; }
-        label { display: block; margin-bottom: 8px; font-size: 0.9em; opacity: 0.8; }
-        /* Updated to include textarea */
-        input, textarea { 
-            width: 100%; 
-            padding: 12px; 
-            background-color: var(--bg-color); 
-            border: 1px solid var(--border-color); 
-            border-radius: 6px; 
-            color: var(--text-color); 
-            font-size: 1em; 
-            box-sizing: border-box; 
-            font-family: inherit; /* Ensures textarea uses the same font */
-        }
+/* --- Tabs & Checkboxes --- */
+.tab-buttons {
+    display: flex;
+    border-bottom: 1px solid var(--border-color);
+    margin-bottom: 30px;
+}
 
-        input:focus, textarea:focus { 
-            outline: none; 
-            border-color: var(--text-color); 
-        }
-        button[type="submit"] { width: 100%; padding: 14px; border: none; border-radius: 6px; background-color: var(--text-color); color: var(--bg-color); font-size: 1.1em; font-weight: bold; cursor: pointer; margin-top: 10px; }
-        .message { margin-top: 20px; font-weight: 500; min-height: 1em; }
-        .success { color: var(--success-color); }
-        .error { color: var(--error-color); }
-        .checkbox-group { display: flex; align-items: center; justify-content: flex-start; gap: 10px; margin-top: 15px; }
+.tab-button {
+    flex: 1;
+    padding: 15px;
+    border: none;
+    background: none;
+    color: var(--text-color);
+    font-size: 1.1em;
+    cursor: pointer;
+    opacity: 0.6;
+    border-bottom: 3px solid transparent;
+    transition: opacity 0.3s, border-color 0.3s;
+}
 
-        /* Modal Styles */
-        .modal-overlay {
-            position: fixed; top: 0; left: 0; right: 0; bottom: 0; background: rgba(0, 0, 0, 0.7);
-            display: none; align-items: center; justify-content: center; z-index: 1000;
-        }
-        .modal-container {
-            background-color: var(--card-color); padding: 40px; border-radius: 12px;
-            border: 1px solid var(--border-color); box-shadow: 0 4px 15px rgba(0, 0, 0, 0.2);
-            width: 100%; max-width: 400px; text-align: center;
-        }
-        .modal-container h2 { margin-top: 0; margin-bottom: 20px; font-weight: 500; }
-        .modal-container p { line-height: 1.6; opacity: 0.9; }
-        .modal-container button { width: 100%; padding: 14px; border: none; border-radius: 6px; background-color: var(--text-color); color: var(--bg-color); font-size: 1.1em; font-weight: bold; cursor: pointer; margin-top: 20px; }
+.tab-button.active {
+    opacity: 1;
+    border-bottom-color: var(--text-color);
+}
 
-        .feature-grid {
-            display: flex;
-            flex-direction: column;
-            gap: 40px;
-            margin-top: 20px;
-        }
+.form-section {
+    display: none;
+}
 
-        .feature-item {
-            display: flex;
-            align-items: center;
-            gap: 30px;
-            /* Removed background and border styles */
-        }
+.form-section.active {
+    display: block;
+}
 
-        .feature-item.reverse {
-            flex-direction: row-reverse;
-        }
+.checkbox-group {
+    display: flex;
+    align-items: center;
+    justify-content: flex-start;
+    gap: 10px;
+    margin-top: 15px;
+    margin-bottom: 20px;
+}
 
-        .feature-image {
-            flex: 2; /* Make image container twice as wide */
-        }
+.checkbox-group input[type="checkbox"] {
+    width: auto;
+    margin: 0;
+    flex-shrink: 0;
+}
 
-        .feature-image img {
-            width: 100%;
-            border-radius: 8px;
-        }
+.checkbox-group label {
+    margin-bottom: 0;
+    white-space: nowrap;
+    flex-grow: 1;
+    text-align: left;
+}
 
-        .feature-description {
-            flex: 1;
-            text-align: center;
-        }
+.message { 
+    margin-top: 20px; 
+    font-weight: 500; 
+    min-height: 1em; 
+}
 
-        .feature-description h3 {
-            font-size: 1.8em;
-            font-weight: 500;
-            color: var(--text-color);
-        }
+.success { color: var(--success-color); }
+.error { color: var(--error-color); }
 
-        @media (max-width: 768px) {
-            .feature-item, .feature-item.reverse {
-                flex-direction: column-reverse; /* Text above image for all items */
-            }
-        }
+/* --- Modals --- */
+.modal-overlay {
+    position: fixed; 
+    top: 0; 
+    left: 0; 
+    right: 0; 
+    bottom: 0; 
+    background: rgba(0, 0, 0, 0.7);
+    display: none; 
+    align-items: center; 
+    justify-content: center; 
+    z-index: 1000;
+}
 
-        /* --- Footer Styles --- */
-        .footer {
-            width: 100%;
-            background-color: var(--card-color);
-            padding: 30px 20px;
-            box-sizing: border-box;
-            margin-top: 80px; /* Give it space from content above */
-            border-top: 1px solid var(--border-color);
-        }
+.modal-container {
+    background-color: var(--card-color); 
+    padding: 40px; 
+    border-radius: 12px;
+    border: 1px solid var(--border-color); 
+    box-shadow: 0 4px 15px rgba(0, 0, 0, 0.2);
+    width: 100%; 
+    max-width: 400px; 
+    text-align: center;
+}
 
-        .footer-content {
-            max-width: 1100px;
-            margin: 0 auto;
-            display: flex;
-            justify-content: space-between;
-            align-items: center;
-            flex-wrap: wrap;
-            gap: 20px;
-        }
+.modal-container h2 { margin-top: 0; margin-bottom: 20px; font-weight: 500; }
+.modal-container p { line-height: 1.6; opacity: 0.9; }
 
-        .footer p {
-            margin: 0;
-            opacity: 0.7;
-        }
+/* --- Footer --- */
+.footer {
+    width: 100%;
+    background-color: var(--card-color);
+    padding: 30px 20px;
+    box-sizing: border-box;
+    margin-top: 80px;
+    border-top: 1px solid var(--border-color);
+}
 
-        .footer-links {
-            display: flex;
-            gap: 25px;
-        }
+.footer-content {
+    max-width: 1100px;
+    margin: 0 auto;
+    display: flex;
+    justify-content: space-between; /* Pushes text to left, links to right */
+    align-items: center;
+    flex-wrap: wrap;
+    gap: 20px;
+}
 
-        .footer-links a {
-            color: var(--text-color);
-            text-decoration: none;
-            opacity: 0.8;
-        }
+/* New wrapper for the copyright and fine print */
+.footer-text {
+    display: flex;
+    flex-direction: column;
+    align-items: flex-start; /* Forces text to align left */
+    gap: 5px; /* Small space between the two lines */
+    text-align: left;
+}
 
-        .footer-links a:hover {
-            opacity: 1;
-            text-decoration: underline;
-        }
+/* Target ALL paragraphs in the footer to make them the same size */
+.footer-text p {
+    margin: 0;
+    opacity: 0.8;
+    font-size: 0.75rem; /* The size you requested */
+    font-weight: 300;     /* Light font weight */
+    color: var(--text-color);
+}
 
-        /* On small screens, stack footer items */
-        @media (max-width: 600px) {
-            .footer-content {
-                flex-direction: column;
-                justify-content: center;
-            }
-        }
+.footer-links {
+    display: flex;
+    gap: 25px;
+}
 
-        /* --- Contact Page Specific Styles --- */
-        .contact-page .form-container {
-            max-width: 600px; /* Wider than the default 450px used for login */
-            width: 100%;
-        }
+.footer-links a {
+    color: var(--text-color);
+    text-decoration: none;
+    opacity: 0.8;
+    font-size: 0.9rem;
+}
 
-        .contact-page .form-group input, 
-        .contact-page .form-group textarea {
-            width: 100%;
-            box-sizing: border-box; /* Ensures padding doesn't break layout */
-            font-family: inherit;
-        }
+.footer-links a:hover {
+    opacity: 1;
+    text-decoration: underline;
+}
 
-        .contact-page .main-content {
-            display: flex;
-            justify-content: center;
-        }
+/* --- Page Specific: Contact Page --- */
+/* Makes the contact form wider and centers it properly */
+.contact-page .form-container {
+    max-width: 600px; 
+    width: 100%;
+}
+
+.contact-page .main-content {
+    display: flex;
+    justify-content: center;
+}
+
+/* --- Mobile Responsiveness --- */
+@media (max-width: 768px) {
+    .feature-item, .feature-item.reverse {
+        flex-direction: column-reverse; /* Text above image */
+    }
+    
+    .hero-content h1 {
+        font-size: 2.2em;
+    }
+}
+
+@media (max-width: 600px) {
+    .footer-content {
+        flex-direction: column;
+        justify-content: center;
+        text-align: center;
+    }
+    
+    .footer-text {
+        align-items: center; /* Center the text stack on mobile */
+        text-align: center;
+    }
+}

@@ -1,3 +1,18 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Contact Us - Stall Monitor</title>
+    <link rel="icon" href="/assets/stallmonitor.png" type="image/png">
+    
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@400;500;600&display=swap" rel="stylesheet">
+    
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0-beta3/css/all.min.css">
+    
+    <link rel="stylesheet" href="/assets/style.css">
+</head>
 <body class="contact-page">
     <header class="header">
         <img src="/assets/stallmonitor.png" alt="Stall Monitor Logo">
@@ -15,7 +30,7 @@
     <div class="hero-container">
         <div class="hero-content">
             <h1>24/7 Cow Behaviour Analysis</h1>
-            </div>
+        </div>
     </div>
 
     <div class="main-content">
@@ -48,7 +63,7 @@
         const userMenu = document.querySelector('.user-menu');
         const dropdownContent = document.querySelector('.dropdown-content');
 
-        // Toggle User Menu (Copied from index.html for consistency)
+        // Toggle User Menu 
         userMenu.addEventListener('click', (event) => {
             event.stopPropagation();
             dropdownContent.classList.toggle('dropdown-active');
@@ -96,9 +111,9 @@
     
     <footer class="footer">
         <div class="footer-content">
-            <div style="display: flex; flex-direction: column; align-items: flex-start;">
+            <div class="footer-text">
                 <p>&copy; 2025 Stall Monitor. All rights reserved.</p>
-                <p style="font-size: 0.75rem; opacity: 0.8; margin-top: 5px; font-weight: 300;">All images in this site are real world detections made by Stall Monitor.</p>
+                <p>All images in this site are real world detections made by Stall Monitor.</p>
             </div>
             <nav class="footer-links">
                 <a href="/index.html">Home</a>
@@ -108,3 +123,4 @@
         </div>
     </footer>
 </body>
+</html>
