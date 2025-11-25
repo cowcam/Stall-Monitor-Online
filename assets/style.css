@@ -122,7 +122,7 @@ body {
     border-radius: 6px;
     cursor: pointer;
     transition: transform 0.2s;
-    text-decoration: none; /* In case it's an <a> tag */
+    text-decoration: none;
     display: inline-block;
 }
 
@@ -198,7 +198,7 @@ video {
     border: 1px solid var(--border-color);
     box-shadow: 0 4px 15px rgba(0, 0, 0, 0.2);
     width: 100%;
-    max-width: 450px; /* Default narrow width for login */
+    max-width: 450px;
     text-align: center;
     margin: 0 auto;
 }
@@ -216,7 +216,7 @@ label {
     opacity: 0.8; 
 }
 
-/* FIX: Applied to both input and textarea */
+/* FIX: Ensure Inputs and Textareas use the correct font and width */
 input, textarea { 
     width: 100%; 
     padding: 12px; 
@@ -224,9 +224,16 @@ input, textarea {
     border: 1px solid var(--border-color); 
     border-radius: 6px; 
     color: var(--text-color); 
-    font-size: 1em; 
+    font-size: 1rem; /* Readable font size */
     box-sizing: border-box; 
-    font-family: inherit;
+    /* Force the Poppins font so it doesn't look different */
+    font-family: 'Poppins', -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
+}
+
+/* FIX: Make the message box tall */
+textarea {
+    resize: vertical;
+    min-height: 150px;
 }
 
 input:focus, textarea:focus { 
@@ -353,27 +360,26 @@ button[type="submit"] {
     max-width: 1100px;
     margin: 0 auto;
     display: flex;
-    justify-content: space-between; /* Pushes text to left, links to right */
+    justify-content: space-between; /* Pushes text left, links right */
     align-items: center;
     flex-wrap: wrap;
     gap: 20px;
 }
 
-/* New wrapper for the copyright and fine print */
+/* Wrapper for the copyright and fine print to align left */
 .footer-text {
     display: flex;
     flex-direction: column;
     align-items: flex-start; /* Forces text to align left */
-    gap: 5px; /* Small space between the two lines */
-    text-align: left;
+    text-align: left;        /* Double insurance for text alignment */
+    gap: 5px;
 }
 
-/* Target ALL paragraphs in the footer to make them the same size */
 .footer-text p {
     margin: 0;
     opacity: 0.8;
-    font-size: 0.75rem; /* The size you requested */
-    font-weight: 300;     /* Light font weight */
+    font-size: 0.75rem; 
+    font-weight: 300;    
     color: var(--text-color);
 }
 
@@ -395,7 +401,6 @@ button[type="submit"] {
 }
 
 /* --- Page Specific: Contact Page --- */
-/* Makes the contact form wider and centers it properly */
 .contact-page .form-container {
     max-width: 600px; 
     width: 100%;
@@ -409,9 +414,8 @@ button[type="submit"] {
 /* --- Mobile Responsiveness --- */
 @media (max-width: 768px) {
     .feature-item, .feature-item.reverse {
-        flex-direction: column-reverse; /* Text above image */
+        flex-direction: column-reverse;
     }
-    
     .hero-content h1 {
         font-size: 2.2em;
     }
@@ -425,7 +429,7 @@ button[type="submit"] {
     }
     
     .footer-text {
-        align-items: center; /* Center the text stack on mobile */
+        align-items: center; /* On mobile, center the text */
         text-align: center;
     }
 }

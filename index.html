@@ -188,7 +188,6 @@
                     try {
                         const userData = JSON.parse(rememberedUser);
                         if (userData.farmName) {
-                            console.log('Remembered user found, redirecting to dashboard...');
                             window.location.href = `/dashboard/${encodeURIComponent(userData.farmName)}`;
                         }
                     } catch (e) {
@@ -216,8 +215,6 @@
         const authModal = document.getElementById('auth-modal');
         const signinLink = document.getElementById('signin-link');
         const signupLink = document.getElementById('signup-link');
-
-        // REMOVED OLD HERO BUTTON SCRIPT (This prevents errors since we changed the button to a Link)
 
         signinLink.addEventListener('click', (e) => {
             e.preventDefault();
