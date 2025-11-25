@@ -325,3 +325,21 @@
                 justify-content: center;
             }
         }
+
+        /* --- Contact Page Specific Styles --- */
+        .contact-page .form-container {
+            max-width: 600px; /* Wider than the default 450px used for login */
+            width: 100%;
+        }
+
+        .contact-page .form-group input, 
+        .contact-page .form-group textarea {
+            width: 100%;
+            box-sizing: border-box; /* Ensures padding doesn't break layout */
+            font-family: inherit;
+        }
+
+        .contact-page .main-content {
+            display: flex;
+            justify-content: center;
+        }

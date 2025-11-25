@@ -31,8 +31,8 @@
     <div class="hero-container">
         <div class="hero-content">
             <h1>24/7 Cow Behaviour Analysis</h1>
-            <p class="hero-subtext">Relax knowing you won't miss important events. Stall Monitor analyzes your camera feed and sends instant alerts. No tags, no collars, peace of mind.</p>
-            <button id="hero-cta-button" class="cta-button">Sign Up Now</button>
+            <p class="hero-subtext">Built by a farmer, for farmers. Stall Monitor is currently in development. Get in touch to try the latest version.</p>
+            <a href="/contact.html" id="hero-cta-button" class="cta-button" style="text-decoration: none; display: inline-block;">Get In Touch</a>
         </div>
     </div>
     <div class="main-content">
@@ -226,15 +226,15 @@
         const signupLink = document.getElementById('signup-link');
         
         // --- ADDED FOR HERO BUTTON ---
-        const heroCtaButton = document.getElementById('hero-cta-button');
+        // const heroCtaButton = document.getElementById('hero-cta-button');
 
-        if (heroCtaButton) {
-            heroCtaButton.addEventListener('click', (e) => {
-                e.preventDefault();
-                showForm('register');
-                authModal.style.display = 'flex';
-            });
-        }
+        // if (heroCtaButton) {
+        //     heroCtaButton.addEventListener('click', (e) => {
+        //         e.preventDefault();
+        //         showForm('register');
+        //         authModal.style.display = 'flex';
+        //     });
+        // }
         // --- END HERO BUTTON SCRIPT ---
 
         signinLink.addEventListener('click', (e) => {
@@ -434,6 +434,7 @@
     <footer class="footer">
         <div class="footer-content">
             <p>&copy; 2025 Stall Monitor. All rights reserved.</p>
+            <p style="font-size: 0.75rem; opacity: 0.8; margin-top: 5px;">All images in this site are real world detections made by Stall Monitor.</p>
             <nav class="footer-links">
                 <a href="/index.html">Home</a>
                 <a href="/cancel.html">Unsubscribe</a>
