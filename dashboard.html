@@ -4,23 +4,29 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
     <title>Stall Monitor</title>
+    
+    <link rel="manifest" href="/manifest.json">
     <link rel="icon" href="/assets/stallmonitor.png" type="image/png">
-    <link rel="manifest" href="/manifest.json"> <meta name="theme-color" content="#242730">
+    <link rel="apple-touch-icon" href="/assets/stallmonitor.png">
+    <meta name="theme-color" content="#242730">
+    <meta name="apple-mobile-web-app-capable" content="yes">
+    <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@400;500;600&display=swap" rel="stylesheet">
+    
     <style>
         body, html {
             margin: 0;
             padding: 0;
             height: 100%;
             width: 100%;
-            overflow: hidden; /* Prevent double scrollbars */
+            overflow: hidden;
             background-color: #242730;
             font-family: 'Poppins', sans-serif;
             color: rgb(240, 227, 197);
         }
 
-        /* The Loading Screen */
         #loader-layer {
             position: absolute;
             top: 0; left: 0; width: 100%; height: 100%;
@@ -33,12 +39,11 @@
             text-align: center;
         }
 
-        /* The actual App Frame */
         #app-frame {
             width: 100%;
             height: 100%;
             border: none;
-            display: none; /* Hidden until loaded */
+            display: none;
             background-color: #242730;
         }
 
@@ -54,7 +59,7 @@
 
         @keyframes spin { 0% { transform: rotate(0deg); } 100% { transform: rotate(360deg); } }
 
-        #retry-btn {
+        #retry-btn, #logout-btn {
             padding: 10px 20px;
             margin-top: 15px;
             background-color: #f0e3c5;
@@ -63,7 +68,12 @@
             border-radius: 5px;
             font-weight: bold;
             cursor: pointer;
-            display: none;
+            display: none; 
+        }
+        
+        #logout-btn {
+            background-color: #4a4f60;
+            color: #f0e3c5;
         }
     </style>
 </head>
@@ -71,54 +81,80 @@
 
     <div id="loader-layer">
         <div class="loader"></div>
-        <h2 id="status-text">Connecting to Farm...</h2>
-        <p id="sub-text" style="font-size: 0.8em; opacity: 0.7;">Establishing secure tunnel</p>
-        <button id="retry-btn" onclick="location.reload()">Retry</button>
+        <h2 id="status-text">Loading...</h2>
+        <p id="sub-text" style="font-size: 0.8em; opacity: 0.7;">Connecting to farm</p>
+        <div style="display: flex; gap: 10px;">
+            <button id="retry-btn" onclick="location.reload()">Retry</button>
+            <button id="logout-btn" onclick="handleLogout()">Log Out</button>
+        </div>
     </div>
 
     <iframe id="app-frame" sandbox="allow-forms allow-scripts allow-same-origin allow-popups allow-modals"></iframe>
 
     <script>
+        function handleLogout() {
+            localStorage.removeItem('loggedInUser');
+            localStorage.removeItem('stallMonitorRememberedUser');
+            window.location.href = '/index.html';
+        }
+
         document.addEventListener('DOMContentLoaded', () => {
             const params = new URLSearchParams(window.location.search);
-            const farmName = params.get('farm');
+            let farmName = params.get('farm');
             
             const statusText = document.getElementById('status-text');
             const subText = document.getElementById('sub-text');
             const iframe = document.getElementById('app-frame');
             const loader = document.getElementById('loader-layer');
             const retryBtn = document.getElementById('retry-btn');
+            const logoutBtn = document.getElementById('logout-btn');
 
+            // 1. If Farm Name is missing from URL, try Local Storage
             if (!farmName) {
-                statusText.textContent = "Setup Required";
-                subText.textContent = "No farm specified in URL.";
+                try {
+                    const userData = localStorage.getItem('loggedInUser');
+                    if (userData) {
+                        const parsed = JSON.parse(userData);
+                        if (parsed.farmName) {
+                            farmName = parsed.farmName;
+                            console.log("Restored farm name from storage:", farmName);
+                        }
+                    }
+                } catch (e) {
+                    console.error("Error reading local storage:", e);
+                }
+            }
+
+            // 2. If still no farm name, they aren't logged in. Send to Login.
+            if (!farmName) {
+                window.location.replace('/index.html');
                 return;
             }
 
-            // Function to load the tunnel into the iframe
+            // --- At this point, we have the Farm Name ---
+
             const loadTunnel = (url) => {
                 statusText.textContent = "Loading Dashboard...";
                 iframe.src = url;
                 
-                // When the iframe loads, hide the loader
                 iframe.onload = () => {
-                    // Small delay to ensure render
                     setTimeout(() => {
                         loader.style.display = 'none';
                         iframe.style.display = 'block';
                     }, 500);
                 };
                 
-                // Fallback: If iframe takes too long (e.g. tunnel dead), show retry
+                // Timeout handler
                 setTimeout(() => {
                     if (loader.style.display !== 'none') {
                         subText.textContent = "Taking longer than expected...";
                         retryBtn.style.display = "inline-block";
+                        logoutBtn.style.display = "inline-block";
                     }
                 }, 8000);
             };
 
-            // 1. Fetch URL from Cloud
+            // 3. Fetch URL from Cloud
             statusText.textContent = `Locating ${farmName}...`;
             
             fetch(`https://my-backend.stallmonitor.workers.dev/api/get-tunnel?farm=${encodeURIComponent(farmName)}`)
@@ -133,7 +169,6 @@
                 })
                 .catch(err => {
                     console.log("Cloud fetch failed, checking local storage:", err);
-                    // Fallback to local storage if cloud fails
                     const localUrl = localStorage.getItem('stallMonitorTunnelUrl');
                     if (localUrl) {
                         loadTunnel(localUrl);
@@ -141,6 +176,7 @@
                         statusText.textContent = "Connection Failed";
                         subText.textContent = "Is your desktop app running?";
                         retryBtn.style.display = "inline-block";
+                        logoutBtn.style.display = "inline-block";
                     }
                 });
         });
