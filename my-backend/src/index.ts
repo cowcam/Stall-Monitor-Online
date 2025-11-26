@@ -4,6 +4,7 @@ import jwt from '@tsndr/cloudflare-worker-jwt';
 
 export interface Env {
   DB: D1Database;
+  TUNNEL_STORE: KVNamespace; // <--- Added for Tunnel Storage
   STRIPE_API_KEY: string;
   STRIPE_WEBHOOK_SECRET: string;
   RESEND_API_KEY: string;
@@ -70,15 +71,13 @@ const authMiddleware = async (c: any, next: any) => {
   }
 };
 
-// --- Handle POST for /register (UPDATED) ---
-// Now accepts and saves farm_name
+// --- Handle POST for /register ---
 app.post('/register', async (c) => {
   try {
-    const { email, password, farm_name } = await c.req.json<{ email: string; password: string; farm_name: string }>(); // Added farm_name
-    if (!email || !password || !farm_name) { // Check all three
+    const { email, password, farm_name } = await c.req.json<{ email: string; password: string; farm_name: string }>();
+    if (!email || !password || !farm_name) {
       return c.json({ error: 'Email, password, and farm name are required' }, 400);
     }
-    // Basic validation for farm name (adjust as needed)
     if (!/^[a-zA-Z0-9\s-]+$/.test(farm_name) || farm_name.length < 3 || farm_name.length > 50) {
         return c.json({ error: 'Invalid farm name (3-50 chars, letters, numbers, spaces, hyphens only)' }, 400);
     }
@@ -87,12 +86,10 @@ app.post('/register', async (c) => {
     const passwordHash = await hashPassword(password, salt);
     const saltHex = bufferToHex(salt);
 
-    // Insert all data including farm_name
     await c.env.DB.prepare(
       'INSERT INTO users (email, password_hash, salt, farm_name) VALUES (?, ?, ?, ?)'
-    ).bind(email, passwordHash, saltHex, farm_name).run(); // Added farm_name binding
+    ).bind(email, passwordHash, saltHex, farm_name).run();
 
-    // Return email AND farm_name
     return c.json({ email: email, farm_name: farm_name, message: 'User account created!' }, 201);
 
   } catch (e: any) {
@@ -100,54 +97,42 @@ app.post('/register', async (c) => {
     if (e instanceof Error && e.message.includes('UNIQUE constraint failed: users.email')) {
       return c.json({ error: 'This email is already in use.' }, 409);
     }
-    if (e instanceof Error && e.message.includes('UNIQUE constraint failed: users.farm_name')) { // Check for farm name conflict
+    if (e instanceof Error && e.message.includes('UNIQUE constraint failed: users.farm_name')) {
       return c.json({ error: 'That farm name is already taken.' }, 409);
     }
     return c.json({ error: 'Error creating account: ' + (e instanceof Error ? e.message : String(e)) }, 500);
   }
 });
 
-// --- Handle POST for /login (UPDATED) ---
-// Now accepts 'identifier' which can be email or farm_name
+// --- Handle POST for /login ---
 app.post('/login', async (c) => {
   try {
-    const { identifier, password } = await c.req.json<{ identifier: string; password: string }>(); // Changed 'email' to 'identifier'
+    const { identifier, password } = await c.req.json<{ identifier: string; password: string }>();
     console.log(`Login attempt for identifier: ${identifier}`);
     if (!identifier || !password) {
-        console.log('Missing identifier or password');
         return c.json({ error: 'Identifier (email or farm name) and password are required' }, 400);
     }
 
-    // Determine if identifier is email or farm name (simple check)
     const isEmail = identifier.includes('@');
     const query = isEmail
       ? 'SELECT email, password_hash, salt, farm_name FROM users WHERE email = ?'
       : 'SELECT email, password_hash, salt, farm_name FROM users WHERE farm_name = ?';
 
-    console.log(`Querying database with: ${query} for identifier: ${identifier}`);
     const user = await c.env.DB.prepare(query)
-      .bind(identifier) // Bind the identifier
+      .bind(identifier)
       .first<{ email: string; password_hash: string; salt: string; farm_name: string | null }>();
 
-    console.log(`Database query result for ${identifier}: ${user ? 'User found' : 'User not found'}`);
-
-    // Manual CORS headers (keep as backup)
     const corsHeader = { 'Access-Control-Allow-Origin': c.req.header('Origin') || '*' };
 
     if (!user) {
-      return c.json({ error: 'Invalid credentials' }, 401, corsHeader); // Generic error
+      return c.json({ error: 'Invalid credentials' }, 401, corsHeader);
     }
 
     const saltBuffer = hexToBuffer(user.salt);
     const storedHash = user.password_hash;
     const providedHash = await hashPassword(password, saltBuffer);
 
-    console.log(`Stored Salt: ${user.salt}`);
-    console.log(`Stored Hash: ${storedHash}`);
-    console.log(`Provided Hash: ${providedHash}`);
-
     if (providedHash === storedHash) {
-      // SUCCESS! Generate JWT
       const token = await jwt.sign({
         email: user.email,
         farm_name: user.farm_name,
@@ -156,9 +141,7 @@ app.post('/login', async (c) => {
 
       return c.json({ email: user.email, farm_name: user.farm_name, token: token, message: 'Login successful!' }, 200, corsHeader);
     } else {
-      // Password mismatch
-      console.log('Password mismatch');
-      return c.json({ error: 'Invalid credentials' }, 401, corsHeader); // Generic error
+      return c.json({ error: 'Invalid credentials' }, 401, corsHeader);
     }
   } catch (e: any) {
     console.error("--- ERROR IN /login ---", e);
@@ -166,24 +149,19 @@ app.post('/login', async (c) => {
   }
 });
 
-// --- Handle POST for /api/create-checkout-session (UPDATED) ---
-// Now looks up farm_name to set success_url
+// --- Handle POST for /api/create-checkout-session ---
 app.post('/api/create-checkout-session', async (c) => {
   try {
-    console.log("Received request for /api/create-checkout-session");
     const { email, farm_name } = await c.req.json<{ email: string; farm_name: string }>();
     const stripe = new Stripe(c.env.STRIPE_API_KEY);
-    const PRICE_ID = "price_1SG1n3CKer7QDo5DEf04QsgI"; // Your Price ID
-    const YOUR_DOMAIN = 'https://www.stallmonitor.com'; // Use your actual domain variable
+    const PRICE_ID = "price_1SG1n3CKer7QDo5DEf04QsgI";
+    const YOUR_DOMAIN = 'https://www.stallmonitor.com';
 
     if (!email || !farm_name) { 
       return c.json({ error: 'Email and farm name are required' }, 400); 
     }
 
-    // --- Use the farm name from the request body ---
-    const farmNameSlug = encodeURIComponent(farm_name); // Ensure URL safety
-
-    console.log(`Creating Stripe session for email: ${email}, redirecting to farm: ${farm_name}`);
+    const farmNameSlug = encodeURIComponent(farm_name);
 
     const session = await stripe.checkout.sessions.create({
       payment_method_types: ['card'],
@@ -198,8 +176,7 @@ app.post('/api/create-checkout-session', async (c) => {
       throw new Error('Could not create Stripe checkout session.');
     }
 
-    console.log("Successfully created Stripe session. URL:", session.url);
-    return c.json({ checkoutUrl: session.url }); // Send 200 OK
+    return c.json({ checkoutUrl: session.url });
 
   } catch (e: any) {
     console.error("--- CATCH BLOCK /api/create-checkout-session ---", e);
@@ -207,9 +184,7 @@ app.post('/api/create-checkout-session', async (c) => {
   }
 });
 
-// --- REMOVED /api/set-farm-name endpoint ---
-
-// --- Handle POST for /api/cancel-subscription (NEW) ---
+// --- Handle POST for /api/cancel-subscription ---
 app.post('/api/cancel-subscription', authMiddleware, async (c) => {
   try {
     const userFromToken = c.get('user');
@@ -219,9 +194,6 @@ app.post('/api/cancel-subscription', authMiddleware, async (c) => {
       return c.json({ error: 'Email not found in token' }, 400);
     }
 
-    console.log(`Cancellation request for email: ${email}`);
-
-    // 1. Find the user and their subscription ID
     const dbUser = await c.env.DB.prepare(
       'SELECT stripe_subscription_id FROM users WHERE email = ?'
     ).bind(email).first<{ stripe_subscription_id: string }>();
@@ -230,20 +202,14 @@ app.post('/api/cancel-subscription', authMiddleware, async (c) => {
       return c.json({ error: 'Active subscription not found for this email.' }, 404);
     }
 
-    // 2. Initialize Stripe and cancel the subscription
     const stripe = new Stripe(c.env.STRIPE_API_KEY);
     await stripe.subscriptions.update(dbUser.stripe_subscription_id, {
       cancel_at_period_end: true,
     });
 
-    console.log(`Subscription ${dbUser.stripe_subscription_id} for ${email} scheduled for cancellation.`);
-
-    // 3. The webhook will handle the DB update when the subscription is officially canceled.
-    // We can optionally update the status to 'canceling' here if we want.
     await c.env.DB.prepare(
       'UPDATE users SET stripe_subscription_status = ? WHERE email = ?'
     ).bind('canceling', email).run();
-
 
     return c.json({ message: 'Your subscription has been scheduled for cancellation at the end of the current billing period.' });
 
@@ -253,7 +219,7 @@ app.post('/api/cancel-subscription', authMiddleware, async (c) => {
   }
 });
 
-// --- Handle POST for /api/contact (NEW) ---
+// --- Handle POST for /api/contact ---
 app.post('/api/contact', async (c) => {
   try {
     const { name, email, message } = await c.req.json<{ name: string; email: string; message: string }>();
@@ -261,14 +227,8 @@ app.post('/api/contact', async (c) => {
       return c.json({ error: 'Name, email, and message are required' }, 400);
     }
 
-    console.log('--- CONTACT FORM SUBMISSION ---');
-    console.log(`Name: ${name}`);
-    console.log(`Email: ${email}`);
-    console.log(`Message: ${message}`);
-    console.log('-----------------------------');
-
-    const SENDER_EMAIL = 'contact@stallmonitor.com'; // Replace with your sender email
-    const RESEND_API_KEY = c.env.RESEND_API_KEY; // Assuming you set this in your Worker secrets
+    const SENDER_EMAIL = 'contact@stallmonitor.com';
+    const RESEND_API_KEY = c.env.RESEND_API_KEY;
 
     const mailPayload = {
       from: `Stall Monitor Contact Form <${SENDER_EMAIL}>`,
@@ -277,29 +237,20 @@ app.post('/api/contact', async (c) => {
       text: `Name: ${name}\nEmail: ${email}\nMessage: ${message}`,
     };
 
-    try {
-      const mailResponse = await fetch('https://api.resend.com/emails', {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-          'Authorization': `Bearer ${RESEND_API_KEY}`,
-        },
-        body: JSON.stringify(mailPayload),
-      });
+    const mailResponse = await fetch('https://api.resend.com/emails', {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+        'Authorization': `Bearer ${RESEND_API_KEY}`,
+      },
+      body: JSON.stringify(mailPayload),
+    });
 
-      if (!mailResponse.ok) {
-        const errorText = await mailResponse.text();
-        console.error('Resend API error:', mailResponse.status, errorText);
-        return c.json({ error: 'Failed to send email via Resend.' }, 500);
-      }
-
-      console.log('Email sent successfully via Resend.');
-      return c.json({ message: 'Message received successfully and email sent!' });
-
-    } catch (mailError) {
-      console.error('Error sending email via Resend:', mailError);
-      return c.json({ error: 'Error sending email.' }, 500);
+    if (!mailResponse.ok) {
+      return c.json({ error: 'Failed to send email via Resend.' }, 500);
     }
+
+    return c.json({ message: 'Message received successfully and email sent!' });
 
   } catch (e: any) {
     console.error("--- ERROR IN /api/contact ---", e);
@@ -307,8 +258,47 @@ app.post('/api/contact', async (c) => {
   }
 });
 
+// --- NEW: Update Tunnel URL (Called by Python App) ---
+app.post('/api/update-tunnel', async (c) => {
+  try {
+    const { farm_name, tunnel_url } = await c.req.json<{ farm_name: string; tunnel_url: string }>();
 
-// --- Handle POST for /webhook (EXPANDED) ---
+    if (!farm_name || !tunnel_url) {
+      return c.json({ error: 'farm_name and tunnel_url are required' }, 400);
+    }
+
+    console.log(`Updating tunnel for ${farm_name} to ${tunnel_url}`);
+    
+    // Save to Cloudflare KV
+    await c.env.TUNNEL_STORE.put(`tunnel_${farm_name}`, tunnel_url);
+
+    return c.json({ status: 'saved', url: tunnel_url });
+  } catch (e: any) {
+    console.error("--- ERROR IN /api/update-tunnel ---", e);
+    return c.json({ error: 'Failed to save tunnel URL: ' + (e instanceof Error ? e.message : String(e)) }, 500);
+  }
+});
+
+// --- NEW: Get Tunnel URL (Called by Dashboard) ---
+app.get('/api/get-tunnel', async (c) => {
+  try {
+    const farm_name = c.req.query('farm');
+
+    if (!farm_name) {
+      return c.json({ error: 'farm query param is required' }, 400);
+    }
+
+    // Read from Cloudflare KV
+    const tunnel_url = await c.env.TUNNEL_STORE.get(`tunnel_${farm_name}`);
+
+    return c.json({ tunnel_url: tunnel_url || null });
+  } catch (e: any) {
+    console.error("--- ERROR IN /api/get-tunnel ---", e);
+    return c.json({ error: 'Failed to get tunnel URL: ' + (e instanceof Error ? e.message : String(e)) }, 500);
+  }
+});
+
+// --- Handle POST for /webhook ---
 app.post('/webhook', async (c) => {
   const stripe = new Stripe(c.env.STRIPE_API_KEY);
   const signature = c.req.header('stripe-signature');
@@ -332,13 +322,11 @@ app.post('/webhook', async (c) => {
           await c.env.DB.prepare(
             'UPDATE users SET stripe_subscription_id = ?, stripe_subscription_status = ? WHERE email = ?'
           ).bind(session.subscription, 'active', customerEmail).run();
-          console.log(`Webhook: Activated subscription for ${customerEmail}`);
         }
         break;
 
       case 'customer.subscription.updated':
         subscription = event.data.object as Stripe.Subscription;
-        // The customer ID is on the subscription object
         const customer = await stripe.customers.retrieve(subscription.customer as string) as Stripe.Customer;
         customerEmail = customer.email;
         if (customerEmail) {
@@ -346,39 +334,28 @@ app.post('/webhook', async (c) => {
             await c.env.DB.prepare(
                 'UPDATE users SET stripe_subscription_status = ? WHERE stripe_subscription_id = ?'
             ).bind(newStatus, subscription.id).run();
-            console.log(`Webhook: Updated subscription for ${customerEmail} to status ${newStatus}`);
         }
         break;
 
       case 'customer.subscription.deleted':
         subscription = event.data.object as Stripe.Subscription;
-        // When a subscription is deleted, its status is 'canceled'.
         await c.env.DB.prepare(
           'UPDATE users SET stripe_subscription_status = ? WHERE stripe_subscription_id = ?'
         ).bind('canceled', subscription.id).run();
-        console.log(`Webhook: Canceled subscription ${subscription.id}`);
         break;
-        
-      default:
-        console.log(`Webhook: Unhandled event type ${event.type}`);
     }
 
     return c.json({ received: true });
   } catch (e: any) {
     console.error("--- ERROR IN /webhook ---", e);
-    return c.json({ error: 'Error processing webhook: ' + (e instanceof Error ? e.message : String(e)) }, 400); // Use 400 for webhook errors
+    return c.json({ error: 'Error processing webhook: ' + (e instanceof Error ? e.message : String(e)) }, 400);
   }
 });
 
-// --- Handle GET for /check-subscription (NEW) ---
+// --- Handle GET for /check-subscription ---
 app.get('/check-subscription/:identifier', async (c) => {
   try {
-    const encodedIdentifier = c.req.param('identifier');
-    // Note: The identifier from the path is already decoded by Hono.
-    // No need for decodeURIComponent.
-    const identifier = encodedIdentifier; 
-
-    console.log(`Checking subscription for identifier: ${identifier}`);
+    const identifier = c.req.param('identifier');
 
     if (!identifier) {
       return c.json({ error: 'Identifier (email or farm name) is required' }, 400);
@@ -389,31 +366,26 @@ app.get('/check-subscription/:identifier', async (c) => {
       ? 'SELECT stripe_subscription_id, stripe_subscription_status FROM users WHERE email = ?'
       : 'SELECT stripe_subscription_id, stripe_subscription_status FROM users WHERE farm_name = ?';
 
-    console.log(`Querying database with: ${query} for identifier: ${identifier}`);
     const user = await c.env.DB.prepare(query)
       .bind(identifier)
-      .first<{ stripe_subscription_id: string; stripe_subscription_status: string }>(); // Corrected type
-
-    console.log(`Database query result for ${identifier}: ${user ? 'User found' : 'User not found'}`);
+      .first<{ stripe_subscription_id: string; stripe_subscription_status: string }>();
 
     if (!user) {
       return c.json({ error: 'User not found' }, 404);
     }
 
     const isActive = user.stripe_subscription_status === 'active';
-    console.log(`Subscription status for ${identifier}: ${isActive ? 'active' : 'inactive'}`);
     return c.json({ subscription_active: isActive });
 
-  } catch (e: any) { // <-- FIX: ADDED CATCH BLOCK
+  } catch (e: any) {
     console.error("--- ERROR IN /check-subscription ---", e);
     return c.json({ error: 'Error checking subscription: ' + (e instanceof Error ? e.message : String(e)) }, 500);
   }
-}); // <-- FIX: ADDED CLOSING FOR app.get
+});
 
 // --- Fallback Route (404 Not Found) ---
 app.notFound((c) => {
-  return c.json({ error: 'Not Found' }, 404); // Middleware adds CORS
+  return c.json({ error: 'Not Found' }, 404);
 });
 
 export default app;
-// <-- FIX: REMOVED EXTRA '}' FROM END OF FILE

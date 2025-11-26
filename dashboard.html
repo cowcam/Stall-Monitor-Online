@@ -3,239 +3,241 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Your Dashboard - Stall Monitor</title>
+    <title>Dashboard Launcher - Stall Monitor</title>
     <link rel="icon" href="/assets/stallmonitor.png" type="image/png">
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@400;500;600&display=swap" rel="stylesheet">
     <style>
         :root {
             --text-color: rgb(240, 227, 197);
             --bg-color: rgb(36, 39, 48);
             --card-color: rgb(56, 61, 79);
-            --border-color: #4a4f60;
             --success-color: #4CAF50;
-            --error-color: #F44336;
+            --border-color: #4a4f60;
         }
 
         body {
-            margin: 0;
-            font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
             background-color: var(--bg-color);
             color: var(--text-color);
-            text-align: center;
-        }
-
-        .header {
-            width: 100%;
-            background-color: var(--bg-color);
-            padding: 15px 30px;
-            box-sizing: border-box;
+            font-family: 'Poppins', sans-serif;
             display: flex;
+            flex-direction: column;
             align-items: center;
-            /* This is the changed property to align header content to the left */
-            justify-content: flex-start;
-            border-bottom: 1px solid var(--border-color);
-        }
-
-        .header img {
-            height: 50px;
-            margin-right: 20px;
-        }
-
-        .header h1 {
-            font-size: 1.8em;
+            justify-content: center;
+            height: 100vh;
             margin: 0;
-            font-weight: 500;
+            text-align: center;
+            padding: 20px;
+            box-sizing: border-box;
         }
 
-        .main-content {
-            padding: 40px 20px;
-            max-width: 800px;
-            margin: 0 auto;
-        }
-
-        .tagline {
-            font-size: 1.5em;
-            font-weight: 300;
-            color: var(--text-color);
-            opacity: 0.9;
-            margin-bottom: 40px;
-        }
-
-        .video-container {
-            width: 100%;
-            max-width: 800px;
-            margin: 0 auto 40px auto;
+        .card {
+            background-color: var(--card-color);
+            padding: 30px;
             border-radius: 12px;
-            overflow: hidden;
             border: 1px solid var(--border-color);
             box-shadow: 0 8px 25px rgba(0, 0, 0, 0.3);
-        }
-
-        video {
             width: 100%;
-            display: block;
+            max-width: 400px;
         }
 
-        .form-container {
-            background-color: var(--card-color);
-            padding: 30px 40px;
-            border-radius: 12px;
+        h2 { margin-top: 0; font-weight: 500; }
+        p { opacity: 0.8; font-size: 0.9em; margin-bottom: 20px; }
+
+        input {
+            width: 100%;
+            padding: 12px;
+            margin-bottom: 15px;
+            background-color: var(--bg-color);
             border: 1px solid var(--border-color);
-            box-shadow: 0 4px 15px rgba(0, 0, 0, 0.2);
-            width: 100%;
-            max-width: 450px;
-            text-align: center;
-            margin: 0 auto;
-        }
-
-        .tab-buttons {
-            display: flex;
-            border-bottom: 1px solid var(--border-color);
-            margin-bottom: 30px;
-        }
-
-        .tab-button {
-            flex: 1;
-            padding: 15px;
-            border: none;
-            background: none;
+            border-radius: 6px;
             color: var(--text-color);
-            font-size: 1.1em;
+            font-size: 1em;
+            box-sizing: border-box;
+            text-align: center;
+        }
+
+        button {
+            width: 100%;
+            padding: 12px;
+            border: none;
+            border-radius: 6px;
+            background-color: var(--text-color);
+            color: var(--bg-color);
+            font-size: 1em;
+            font-weight: bold;
             cursor: pointer;
-            opacity: 0.6;
-            border-bottom: 3px solid transparent;
-            transition: opacity 0.3s, border-color 0.3s;
+            transition: transform 0.1s;
         }
 
-        .tab-button.active {
-            opacity: 1;
-            border-bottom-color: var(--text-color);
-        }
+        button:active { transform: scale(0.98); }
 
-        .form-section {
+        .loader-container {
             display: none;
+            flex-direction: column;
+            align-items: center;
         }
 
-        .form-section.active {
-            display: block;
+        .loader {
+            border: 4px solid rgba(240, 227, 197, 0.3);
+            border-top: 4px solid var(--text-color);
+            border-radius: 50%;
+            width: 40px;
+            height: 40px;
+            animation: spin 1s linear infinite;
+            margin-bottom: 20px;
         }
-        
-        .form-group { margin-bottom: 20px; text-align: left; }
-        label { display: block; margin-bottom: 8px; font-size: 0.9em; opacity: 0.8; }
-        input { width: 100%; padding: 12px; background-color: var(--bg-color); border: 1px solid var(--border-color); border-radius: 6px; color: var(--text-color); font-size: 1em; box-sizing: border-box; }
-        input:focus { outline: none; border-color: var(--text-color); }
-        button[type="submit"] { width: 100%; padding: 14px; border: none; border-radius: 6px; background-color: var(--text-color); color: var(--bg-color); font-size: 1.1em; font-weight: bold; cursor: pointer; margin-top: 10px; }
-        .message { margin-top: 20px; font-weight: 500; min-height: 1em; }
-        .success { color: var(--success-color); }
-        .error { color: var(--error-color); }
-        .checkbox-group { display: flex; align-items: center; justify-content: flex-start; gap: 10px; margin-top: 15px; }
 
-        /* Modal Styles */
-        .modal-overlay {
-            position: fixed; top: 0; left: 0; right: 0; bottom: 0; background: rgba(0, 0, 0, 0.7);
-            display: none; align-items: center; justify-content: center; z-index: 1000;
+        @keyframes spin { 0% { transform: rotate(0deg); } 100% { transform: rotate(360deg); } }
+
+        #countdown-bar {
+            width: 100%;
+            height: 4px;
+            background-color: rgba(255,255,255,0.1);
+            border-radius: 2px;
+            margin-bottom: 20px;
+            overflow: hidden;
         }
-        .modal-container {
-            background-color: var(--card-color); padding: 40px; border-radius: 12px;
-            border: 1px solid var(--border-color); box-shadow: 0 4px 15px rgba(0, 0, 0, 0.2);
-            width: 100%; max-width: 400px; text-align: center;
+
+        #countdown-progress {
+            width: 100%;
+            height: 100%;
+            background-color: var(--success-color);
+            transition: width 0.1s linear;
         }
-        .modal-container h2 { margin-top: 0; margin-bottom: 20px; font-weight: 500; }
-        .modal-container p { line-height: 1.6; opacity: 0.9; }
-        .modal-container button { width: 100%; padding: 14px; border: none; border-radius: 6px; background-color: var(--text-color); color: var(--bg-color); font-size: 1.1em; font-weight: bold; cursor: pointer; margin-top: 20px; }
     </style>
 </head>
 <body>
-    <header class="header">
-        <img src="/assets/stallmonitor.png" alt="Stall Monitor Logo">
-        <h1>Stall Monitor</h1>
-    </header>
 
-    <div class="main-content">
-        <h2 id="dashboard-title">Loading Dashboard...</h2>
-        
-        <div id="farm-data">
+    <div id="input-view" class="card" style="display: none;">
+        <h2>Connect Dashboard</h2>
+        <p>We couldn't find your farm's active connection automatically.</p>
+        <p>Please paste the <strong>Tunnel URL</strong> from your desktop app settings.</p>
+        <form id="link-form">
+            <input type="url" id="tunnel-url" placeholder="https://....trycloudflare.com" required>
+            <button type="submit">Save & Connect</button>
+        </form>
+        <br>
+        <a href="/setup.html" style="font-size: 0.8em; color: inherit; opacity: 0.6;">Go to Setup</a>
+    </div>
+
+    <div id="redirect-view" class="card" style="display: none;">
+        <div class="loader-container" style="display: flex;">
+            <h2 id="status-title">Searching...</h2>
+            <p id="status-text">Looking for your farm connection...</p>
+            
+            <div id="countdown-bar">
+                <div id="countdown-progress"></div>
             </div>
 
-        <p><a href="/">Back to Home / Log Out</a></p>
+            <div class="loader"></div>
+            
+            <button id="cancel-btn" style="background-color: #e53935; margin-top: 10px;">Manual Entry</button>
+        </div>
     </div>
 
     <script>
-        const WORKER_URL = 'https://my-backend.stallmonitor.workers.dev';
-
         document.addEventListener('DOMContentLoaded', () => {
-        // 1. Get the farm name from the URL query parameters
-        const params = new URLSearchParams(window.location.search);
-        const farmName = params.get('farm'); // e.g., "My Farm"
+            const params = new URLSearchParams(window.location.search);
+            const farmName = params.get('farm');
+            
+            const inputView = document.getElementById('input-view');
+            const redirectView = document.getElementById('redirect-view');
+            const statusTitle = document.getElementById('status-title');
+            const statusText = document.getElementById('status-text');
+            const urlInput = document.getElementById('tunnel-url');
+            const progressBar = document.getElementById('countdown-progress');
+            
+            // Helper to start the visual countdown and redirect
+            const initiateRedirect = (url, delay = 2000) => {
+                redirectView.style.display = 'block';
+                inputView.style.display = 'none';
+                
+                statusTitle.textContent = "Connected!";
+                statusText.innerHTML = `Redirecting to <strong>${farmName || 'Dashboard'}</strong>...`;
+                
+                let timeLeft = delay;
+                const intervalTime = 20;
+                let timer;
 
-        console.log("Extracted Farm Name from query param:", farmName);
+                timer = setInterval(() => {
+                    timeLeft -= intervalTime;
+                    const percentage = (timeLeft / delay) * 100;
+                    progressBar.style.width = percentage + "%";
 
-        const titleElement = document.getElementById('dashboard-title');
-        const dataElement = document.getElementById('farm-data');
-
-        if (!farmName) {
-            // This is the error you saw
-            titleElement.textContent = 'Error: Farm name not found in URL path (/dashboard/YourFarmName).';
-            dataElement.textContent = 'Please log in again.';
-            return;
-        }
-
-            titleElement.textContent = `Dashboard for ${farmName}`; // This part stays the same
-
-            // 2. TODO: Fetch farm-specific data from the backend
-            // We need to create a NEW endpoint in my-backend, e.g., GET /api/farm-data?name=...
-            // that returns the alerts/graphs for this specific farm.
-
-            /*
-            async function loadFarmData() {
-                try {
-                    // Example: Replace with your actual backend endpoint
-                    const response = await fetch(`${WORKER_URL}/api/farm-data?name=${encodeURIComponent(farmName)}`);
-                    
-                    if (!response.ok) {
-                        throw new Error(`Failed to load data: ${response.statusText}`);
+                    if (timeLeft <= 0) {
+                        clearInterval(timer);
+                        window.location.replace(url);
                     }
-                    
-                    const data = await response.json();
-                    
-                    // TODO: Use the 'data' to display alerts, charts, etc.
-                    dataElement.textContent = `Welcome! Data for ${farmName} would load here.`;
-                    
-                } catch (error) {
-                    console.error("Error loading farm data:", error);
-                    dataElement.textContent = `Error loading data for ${farmName}.`;
+                }, intervalTime);
+
+                document.getElementById('cancel-btn').addEventListener('click', () => {
+                    clearInterval(timer);
+                    showManualEntry();
+                });
+            };
+
+            const showManualEntry = () => {
+                redirectView.style.display = 'none';
+                inputView.style.display = 'block';
+                // Pre-fill from local storage if available
+                const savedUrl = localStorage.getItem('stallMonitorTunnelUrl');
+                if (savedUrl) urlInput.value = savedUrl;
+            };
+
+            // --- LOGIC FLOW ---
+
+            if (farmName) {
+                // 1. Try Cloud Fetch
+                redirectView.style.display = 'block';
+                
+                fetch(`https://my-backend.stallmonitor.workers.dev/api/get-tunnel?farm=${encodeURIComponent(farmName)}`)
+                    .then(res => res.json())
+                    .then(data => {
+                        if (data.tunnel_url) {
+                            console.log("Found cloud tunnel:", data.tunnel_url);
+                            localStorage.setItem('stallMonitorTunnelUrl', data.tunnel_url);
+                            initiateRedirect(data.tunnel_url);
+                        } else {
+                            console.log("No active tunnel found in cloud.");
+                            // Fallback to local storage check
+                            checkLocalStorage();
+                        }
+                    })
+                    .catch(err => {
+                        console.log("Cloud fetch failed:", err);
+                        checkLocalStorage();
+                    });
+            } else {
+                // No farm name param, check local storage immediately
+                checkLocalStorage();
+            }
+
+            function checkLocalStorage() {
+                const savedUrl = localStorage.getItem('stallMonitorTunnelUrl');
+                if (savedUrl) {
+                    statusTitle.textContent = "Using Saved Link";
+                    statusText.textContent = "Using last known connection...";
+                    initiateRedirect(savedUrl, 3000); // Give them 3s to cancel since it might be old
+                } else {
+                    showManualEntry();
                 }
             }
-            
-            // loadFarmData(); // Call the function to load data
-            */
-            
-            // For now, just show a placeholder message
-            dataElement.textContent = `Welcome! Data for ${farmName} will load here.`;
 
-        });
-    </script>
-    <footer class="footer">
-        <div class="footer-content">
-            <p>&copy; 2025 Stall Monitor. All rights reserved.</p>
-            <nav class="footer-links">
-                <a href="/index.html">Home</a>
-                <a href="/cancel.html">Unsubscribe</a>
-                <a href="#" id="contact-link">Contact</a>
-                </nav>
-        </div>
-    </footer>
+            // 2. Handle Manual Save
+            document.getElementById('link-form').addEventListener('submit', (e) => {
+                e.preventDefault();
+                const newUrl = urlInput.value.trim();
 
-    <script>
-        // Anti-spam contact link
-        const contactLink = document.getElementById('contact-link');
-        if (contactLink) {
-            contactLink.addEventListener('click', function(event) {
-                event.preventDefault();
-                const user = 'info';
-                const domain = 'stallmonitor.com';
-                window.location.href = 'mailto:' + user + '@' + domain;
+                if (!newUrl.startsWith('http')) {
+                    alert("Please enter a valid URL starting with http:// or https://");
+                    return;
+                }
+
+                localStorage.setItem('stallMonitorTunnelUrl', newUrl);
+                window.location.replace(newUrl);
             });
-        }
+        });
     </script>
 </body>
 </html>

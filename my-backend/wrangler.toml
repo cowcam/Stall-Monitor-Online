@@ -9,4 +9,8 @@ binding = "DB"
 database_name = "my-guestbook-db"
 database_id = "86e92860-08ef-4e6d-9513-e6ed5a9e04b3"
 
+[[kv_namespaces]]
+binding = "TUNNEL_STORE"
+id = "40210a36ce4a4e7a8b662c01d49bbd2f"
+
 
