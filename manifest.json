@@ -1,0 +1,20 @@
+{
+  "name": "Stall Monitor",
+  "short_name": "Stall Monitor",
+  "start_url": "/dashboard.html",
+  "display": "standalone",
+  "background_color": "#242730",
+  "theme_color": "#242730",
+  "icons": [
+    {
+      "src": "/assets/stallmonitor.png",
+      "sizes": "192x192",
+      "type": "image/png"
+    },
+    {
+      "src": "/assets/stallmonitor.png",
+      "sizes": "512x512",
+      "type": "image/png"
+    }
+  ]
+}

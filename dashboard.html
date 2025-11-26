@@ -2,85 +2,49 @@
 <html lang="en">
 <head>
     <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Dashboard Launcher - Stall Monitor</title>
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <title>Stall Monitor</title>
     <link rel="icon" href="/assets/stallmonitor.png" type="image/png">
+    <link rel="manifest" href="/manifest.json"> <meta name="theme-color" content="#242730">
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@400;500;600&display=swap" rel="stylesheet">
     <style>
-        :root {
-            --text-color: rgb(240, 227, 197);
-            --bg-color: rgb(36, 39, 48);
-            --card-color: rgb(56, 61, 79);
-            --success-color: #4CAF50;
-            --border-color: #4a4f60;
+        body, html {
+            margin: 0;
+            padding: 0;
+            height: 100%;
+            width: 100%;
+            overflow: hidden; /* Prevent double scrollbars */
+            background-color: #242730;
+            font-family: 'Poppins', sans-serif;
+            color: rgb(240, 227, 197);
         }
 
-        body {
-            background-color: var(--bg-color);
-            color: var(--text-color);
-            font-family: 'Poppins', sans-serif;
+        /* The Loading Screen */
+        #loader-layer {
+            position: absolute;
+            top: 0; left: 0; width: 100%; height: 100%;
+            background-color: #242730;
             display: flex;
             flex-direction: column;
             align-items: center;
             justify-content: center;
-            height: 100vh;
-            margin: 0;
-            text-align: center;
-            padding: 20px;
-            box-sizing: border-box;
-        }
-
-        .card {
-            background-color: var(--card-color);
-            padding: 30px;
-            border-radius: 12px;
-            border: 1px solid var(--border-color);
-            box-shadow: 0 8px 25px rgba(0, 0, 0, 0.3);
-            width: 100%;
-            max-width: 400px;
-        }
-
-        h2 { margin-top: 0; font-weight: 500; }
-        p { opacity: 0.8; font-size: 0.9em; margin-bottom: 20px; }
-
-        input {
-            width: 100%;
-            padding: 12px;
-            margin-bottom: 15px;
-            background-color: var(--bg-color);
-            border: 1px solid var(--border-color);
-            border-radius: 6px;
-            color: var(--text-color);
-            font-size: 1em;
-            box-sizing: border-box;
+            z-index: 10;
             text-align: center;
         }
 
-        button {
+        /* The actual App Frame */
+        #app-frame {
             width: 100%;
-            padding: 12px;
+            height: 100%;
             border: none;
-            border-radius: 6px;
-            background-color: var(--text-color);
-            color: var(--bg-color);
-            font-size: 1em;
-            font-weight: bold;
-            cursor: pointer;
-            transition: transform 0.1s;
-        }
-
-        button:active { transform: scale(0.98); }
-
-        .loader-container {
-            display: none;
-            flex-direction: column;
-            align-items: center;
+            display: none; /* Hidden until loaded */
+            background-color: #242730;
         }
 
         .loader {
             border: 4px solid rgba(240, 227, 197, 0.3);
-            border-top: 4px solid var(--text-color);
+            border-top: 4px solid rgb(240, 227, 197);
             border-radius: 50%;
             width: 40px;
             height: 40px;
@@ -90,153 +54,95 @@
 
         @keyframes spin { 0% { transform: rotate(0deg); } 100% { transform: rotate(360deg); } }
 
-        #countdown-bar {
-            width: 100%;
-            height: 4px;
-            background-color: rgba(255,255,255,0.1);
-            border-radius: 2px;
-            margin-bottom: 20px;
-            overflow: hidden;
-        }
-
-        #countdown-progress {
-            width: 100%;
-            height: 100%;
-            background-color: var(--success-color);
-            transition: width 0.1s linear;
+        #retry-btn {
+            padding: 10px 20px;
+            margin-top: 15px;
+            background-color: #f0e3c5;
+            color: #242730;
+            border: none;
+            border-radius: 5px;
+            font-weight: bold;
+            cursor: pointer;
+            display: none;
         }
     </style>
 </head>
 <body>
 
-    <div id="input-view" class="card" style="display: none;">
-        <h2>Connect Dashboard</h2>
-        <p>We couldn't find your farm's active connection automatically.</p>
-        <p>Please paste the <strong>Tunnel URL</strong> from your desktop app settings.</p>
-        <form id="link-form">
-            <input type="url" id="tunnel-url" placeholder="https://....trycloudflare.com" required>
-            <button type="submit">Save & Connect</button>
-        </form>
-        <br>
-        <a href="/setup.html" style="font-size: 0.8em; color: inherit; opacity: 0.6;">Go to Setup</a>
+    <div id="loader-layer">
+        <div class="loader"></div>
+        <h2 id="status-text">Connecting to Farm...</h2>
+        <p id="sub-text" style="font-size: 0.8em; opacity: 0.7;">Establishing secure tunnel</p>
+        <button id="retry-btn" onclick="location.reload()">Retry</button>
     </div>
 
-    <div id="redirect-view" class="card" style="display: none;">
-        <div class="loader-container" style="display: flex;">
-            <h2 id="status-title">Searching...</h2>
-            <p id="status-text">Looking for your farm connection...</p>
-            
-            <div id="countdown-bar">
-                <div id="countdown-progress"></div>
-            </div>
-
-            <div class="loader"></div>
-            
-            <button id="cancel-btn" style="background-color: #e53935; margin-top: 10px;">Manual Entry</button>
-        </div>
-    </div>
+    <iframe id="app-frame" sandbox="allow-forms allow-scripts allow-same-origin allow-popups allow-modals"></iframe>
 
     <script>
         document.addEventListener('DOMContentLoaded', () => {
             const params = new URLSearchParams(window.location.search);
             const farmName = params.get('farm');
             
-            const inputView = document.getElementById('input-view');
-            const redirectView = document.getElementById('redirect-view');
-            const statusTitle = document.getElementById('status-title');
             const statusText = document.getElementById('status-text');
-            const urlInput = document.getElementById('tunnel-url');
-            const progressBar = document.getElementById('countdown-progress');
-            
-            // Helper to start the visual countdown and redirect
-            const initiateRedirect = (url, delay = 2000) => {
-                redirectView.style.display = 'block';
-                inputView.style.display = 'none';
-                
-                statusTitle.textContent = "Connected!";
-                statusText.innerHTML = `Redirecting to <strong>${farmName || 'Dashboard'}</strong>...`;
-                
-                let timeLeft = delay;
-                const intervalTime = 20;
-                let timer;
+            const subText = document.getElementById('sub-text');
+            const iframe = document.getElementById('app-frame');
+            const loader = document.getElementById('loader-layer');
+            const retryBtn = document.getElementById('retry-btn');
 
-                timer = setInterval(() => {
-                    timeLeft -= intervalTime;
-                    const percentage = (timeLeft / delay) * 100;
-                    progressBar.style.width = percentage + "%";
+            if (!farmName) {
+                statusText.textContent = "Setup Required";
+                subText.textContent = "No farm specified in URL.";
+                return;
+            }
 
-                    if (timeLeft <= 0) {
-                        clearInterval(timer);
-                        window.location.replace(url);
+            // Function to load the tunnel into the iframe
+            const loadTunnel = (url) => {
+                statusText.textContent = "Loading Dashboard...";
+                iframe.src = url;
+                
+                // When the iframe loads, hide the loader
+                iframe.onload = () => {
+                    // Small delay to ensure render
+                    setTimeout(() => {
+                        loader.style.display = 'none';
+                        iframe.style.display = 'block';
+                    }, 500);
+                };
+                
+                // Fallback: If iframe takes too long (e.g. tunnel dead), show retry
+                setTimeout(() => {
+                    if (loader.style.display !== 'none') {
+                        subText.textContent = "Taking longer than expected...";
+                        retryBtn.style.display = "inline-block";
                     }
-                }, intervalTime);
+                }, 8000);
+            };
 
-                document.getElementById('cancel-btn').addEventListener('click', () => {
-                    clearInterval(timer);
-                    showManualEntry();
+            // 1. Fetch URL from Cloud
+            statusText.textContent = `Locating ${farmName}...`;
+            
+            fetch(`https://my-backend.stallmonitor.workers.dev/api/get-tunnel?farm=${encodeURIComponent(farmName)}`)
+                .then(res => res.json())
+                .then(data => {
+                    if (data.tunnel_url) {
+                        console.log("Tunnel found:", data.tunnel_url);
+                        loadTunnel(data.tunnel_url);
+                    } else {
+                        throw new Error("No tunnel active");
+                    }
+                })
+                .catch(err => {
+                    console.log("Cloud fetch failed, checking local storage:", err);
+                    // Fallback to local storage if cloud fails
+                    const localUrl = localStorage.getItem('stallMonitorTunnelUrl');
+                    if (localUrl) {
+                        loadTunnel(localUrl);
+                    } else {
+                        statusText.textContent = "Connection Failed";
+                        subText.textContent = "Is your desktop app running?";
+                        retryBtn.style.display = "inline-block";
+                    }
                 });
-            };
-
-            const showManualEntry = () => {
-                redirectView.style.display = 'none';
-                inputView.style.display = 'block';
-                // Pre-fill from local storage if available
-                const savedUrl = localStorage.getItem('stallMonitorTunnelUrl');
-                if (savedUrl) urlInput.value = savedUrl;
-            };
-
-            // --- LOGIC FLOW ---
-
-            if (farmName) {
-                // 1. Try Cloud Fetch
-                redirectView.style.display = 'block';
-                
-                fetch(`https://my-backend.stallmonitor.workers.dev/api/get-tunnel?farm=${encodeURIComponent(farmName)}`)
-                    .then(res => res.json())
-                    .then(data => {
-                        if (data.tunnel_url) {
-                            console.log("Found cloud tunnel:", data.tunnel_url);
-                            localStorage.setItem('stallMonitorTunnelUrl', data.tunnel_url);
-                            initiateRedirect(data.tunnel_url);
-                        } else {
-                            console.log("No active tunnel found in cloud.");
-                            // Fallback to local storage check
-                            checkLocalStorage();
-                        }
-                    })
-                    .catch(err => {
-                        console.log("Cloud fetch failed:", err);
-                        checkLocalStorage();
-                    });
-            } else {
-                // No farm name param, check local storage immediately
-                checkLocalStorage();
-            }
-
-            function checkLocalStorage() {
-                const savedUrl = localStorage.getItem('stallMonitorTunnelUrl');
-                if (savedUrl) {
-                    statusTitle.textContent = "Using Saved Link";
-                    statusText.textContent = "Using last known connection...";
-                    initiateRedirect(savedUrl, 3000); // Give them 3s to cancel since it might be old
-                } else {
-                    showManualEntry();
-                }
-            }
-
-            // 2. Handle Manual Save
-            document.getElementById('link-form').addEventListener('submit', (e) => {
-                e.preventDefault();
-                const newUrl = urlInput.value.trim();
-
-                if (!newUrl.startsWith('http')) {
-                    alert("Please enter a valid URL starting with http:// or https://");
-                    return;
-                }
-
-                localStorage.setItem('stallMonitorTunnelUrl', newUrl);
-                window.location.replace(newUrl);
-            });
         });
     </script>
 </body>
