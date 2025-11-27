@@ -21,7 +21,7 @@
             padding: 0;
             height: 100%;
             width: 100%;
-            /* Removed 'overflow: hidden' to allow panning when zoomed in */
+            /* Removed overflow:hidden to allow panning when zoomed */
             background-color: #242730;
             font-family: 'Poppins', sans-serif;
             color: rgb(240, 227, 197);
@@ -92,9 +92,20 @@
     <iframe id="app-frame" sandbox="allow-forms allow-scripts allow-same-origin allow-popups allow-modals"></iframe>
 
     <script>
+        // --- 1. Listen for Token from Iframe (Login Sync) ---
+        window.addEventListener('message', (event) => {
+            if (event.data && event.data.type === 'SAVE_TOKEN') {
+                if (event.data.token) {
+                    console.log("Saving token to permanent storage");
+                    localStorage.setItem('stallMonitorAppToken', event.data.token);
+                }
+            }
+        });
+
         function handleLogout() {
             localStorage.removeItem('loggedInUser');
             localStorage.removeItem('stallMonitorRememberedUser');
+            localStorage.removeItem('stallMonitorAppToken');
             window.location.href = '/index.html';
         }
 
@@ -109,7 +120,7 @@
             const retryBtn = document.getElementById('retry-btn');
             const logoutBtn = document.getElementById('logout-btn');
 
-            // 1. If Farm Name is missing from URL, try Local Storage
+            // --- 2. Farm Name Recovery ---
             if (!farmName) {
                 try {
                     const userData = localStorage.getItem('loggedInUser');
@@ -125,16 +136,22 @@
                 }
             }
 
-            // 2. If still no farm name, they aren't logged in. Send to Login.
             if (!farmName) {
                 window.location.replace('/index.html');
                 return;
             }
 
-            // --- At this point, we have the Farm Name ---
-
+            // --- 3. Load Tunnel & Setup Notifications ---
             const loadTunnel = (url) => {
                 statusText.textContent = "Loading Dashboard...";
+                
+                // Inject Token for Auto-Login
+                const savedAppToken = localStorage.getItem('stallMonitorAppToken');
+                if (savedAppToken) {
+                    const separator = url.includes('?') ? '&' : '?';
+                    url = `${url}${separator}authtoken=${savedAppToken}`;
+                }
+
                 iframe.src = url;
                 
                 iframe.onload = () => {
@@ -144,7 +161,7 @@
                     }, 500);
                 };
                 
-                // Timeout handler
+                // Timeout Handler
                 setTimeout(() => {
                     if (loader.style.display !== 'none') {
                         subText.textContent = "Taking longer than expected...";
@@ -152,9 +169,12 @@
                         logoutBtn.style.display = "inline-block";
                     }
                 }, 8000);
+
+                // Trigger Push Notification Setup
+                setupNotifications(url);
             };
 
-            // 3. Fetch URL from Cloud
+            // --- 4. Fetch URL from Cloud ---
             statusText.textContent = `Locating ${farmName}...`;
             
             fetch(`https://my-backend.stallmonitor.workers.dev/api/get-tunnel?farm=${encodeURIComponent(farmName)}`)
@@ -180,6 +200,60 @@
                     }
                 });
         });
+
+        // --- 5. Push Notification Logic ---
+        async function setupNotifications(tunnelFullUrl) {
+            if (!('serviceWorker' in navigator) || !('PushManager' in window)) {
+                console.log("Push notifications not supported");
+                return;
+            }
+
+            // Clean the URL (remove ?authtoken=... if present)
+            const cleanTunnelUrl = tunnelFullUrl.split('?')[0];
+
+            try {
+                // Register Service Worker on THIS domain (stallmonitor.com)
+                // Ensure service-worker.js is in the same folder on your server!
+                const registration = await navigator.serviceWorker.register('/service-worker.js');
+                console.log("Service Worker Registered");
+
+                // Fetch VAPID Key from Python App via Tunnel
+                const keyResponse = await fetch(`${cleanTunnelUrl}/api/vapid-key`);
+                const keyData = await keyResponse.json();
+                
+                if (!keyData.publicKey) return;
+
+                // Subscribe User
+                const subscription = await registration.pushManager.subscribe({
+                    userVisibleOnly: true,
+                    applicationServerKey: urlBase64ToUint8Array(keyData.publicKey)
+                });
+
+                // Send Subscription back to Python App via Tunnel
+                await fetch(`${cleanTunnelUrl}/save-subscription`, {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify(subscription)
+                });
+                
+                console.log("Push Notification Subscription Saved!");
+
+            } catch (error) {
+                console.error("Notification setup failed:", error);
+            }
+        }
+
+        // Helper: VAPID Key Conversion
+        function urlBase64ToUint8Array(base64String) {
+            const padding = '='.repeat((4 - base64String.length % 4) % 4);
+            const base64 = (base64String + padding).replace(/-/g, '+').replace(/_/g, '/');
+            const rawData = window.atob(base64);
+            const outputArray = new Uint8Array(rawData.length);
+            for (let i = 0; i < rawData.length; ++i) {
+                outputArray[i] = rawData.charCodeAt(i);
+            }
+            return outputArray;
+        }
     </script>
 </body>
 </html>
