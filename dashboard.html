@@ -11,7 +11,6 @@
     <meta name="theme-color" content="#242730">
     <meta name="apple-mobile-web-app-capable" content="yes">
     <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
-    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/@mdi/font@7.4.47/css/materialdesignicons.min.css">
 
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@400;500;600&display=swap" rel="stylesheet">
@@ -75,29 +74,6 @@
             background-color: #4a4f60;
             color: #f0e3c5;
         }
-
-        /* Floating Notification Button */
-        #notify-fab {
-            position: fixed;
-            bottom: 20px;
-            right: 20px;
-            width: 56px;
-            height: 56px;
-            border-radius: 50%;
-            background-color: #f0e3c5;
-            color: #242730;
-            display: none; /* Hidden by default */
-            align-items: center;
-            justify-content: center;
-            box-shadow: 0 4px 10px rgba(0,0,0,0.3);
-            cursor: pointer;
-            z-index: 100;
-            border: none;
-            font-size: 24px;
-        }
-        #notify-fab:active {
-            transform: scale(0.95);
-        }
     </style>
 </head>
 <body>
@@ -114,21 +90,26 @@
 
     <iframe id="app-frame" sandbox="allow-forms allow-scripts allow-same-origin allow-popups allow-modals"></iframe>
 
-    <button id="notify-fab" title="Enable Alerts">
-        <span class="mdi mdi-bell-ring-outline"></span>
-    </button>
-
     <script>
         // --- HARDCODED VAPID PUBLIC KEY ---
         const VAPID_PUBLIC_KEY = "BN3jhQwWibJ7M8yzndwuKcIZjXGH4b9cAFnTbRfNL1ZjtWKkI8Pl9X8T0htyPodhKvqcsD-Dy-gySUPZk85ZoDY";
         
-        let currentTunnelUrl = ""; // Store URL globally for the button
+        let currentTunnelUrl = ""; 
 
-        // Listen for Token from Iframe
+        // --- BRIDGE: Listen for messages from the Python App ---
         window.addEventListener('message', (event) => {
-            if (event.data && event.data.type === 'SAVE_TOKEN') {
-                if (event.data.token) {
-                    localStorage.setItem('stallMonitorAppToken', event.data.token);
+            const data = event.data;
+            if (!data) return;
+
+            // 1. Login Token Logic
+            if (data.type === 'SAVE_TOKEN' && data.token) {
+                localStorage.setItem('stallMonitorAppToken', data.token);
+            }
+
+            // 2. Notification Request (User clicked bell in App)
+            if (data.type === 'REQUEST_NOTIFICATIONS') {
+                if (currentTunnelUrl) {
+                    setupNotifications(currentTunnelUrl);
                 }
             }
         });
@@ -150,16 +131,6 @@
             const loader = document.getElementById('loader-layer');
             const retryBtn = document.getElementById('retry-btn');
             const logoutBtn = document.getElementById('logout-btn');
-            const notifyBtn = document.getElementById('notify-fab');
-
-            // Setup Notification Button Click Handler
-            notifyBtn.addEventListener('click', () => {
-                if(currentTunnelUrl) {
-                    setupNotifications(currentTunnelUrl);
-                } else {
-                    alert("Waiting for tunnel connection...");
-                }
-            });
 
             // Farm Name Recovery
             if (!farmName) {
@@ -194,9 +165,6 @@
                     setTimeout(() => {
                         loader.style.display = 'none';
                         iframe.style.display = 'block';
-                        
-                        // Check if we need to show the notification button
-                        checkNotificationPermission();
                     }, 500);
                 };
                 
@@ -234,50 +202,36 @@
                 });
         });
 
-        function checkNotificationPermission() {
-            if (!('serviceWorker' in navigator) || !('PushManager' in window)) return;
-
-            // Only show button if permission is default (ask) or denied (to retry)
-            if (Notification.permission !== 'granted') {
-                document.getElementById('notify-fab').style.display = 'flex';
-            } else {
-                document.getElementById('notify-fab').style.display = 'none';
-            }
-        }
-
+        // --- NOTIFICATION LOGIC ---
         async function setupNotifications(tunnelFullUrl) {
             if (!('serviceWorker' in navigator)) return;
 
-            // Clean the URL 
             const cleanTunnelUrl = tunnelFullUrl.split('?')[0];
 
             try {
-                // 1. Register SW
                 const registration = await navigator.serviceWorker.register('/service-worker.js');
                 console.log("SW Registered");
 
-                // 2. Use Hardcoded Key (No network fetch, preserving user gesture)
-                const publicKey = VAPID_PUBLIC_KEY;
-
-                // 3. Subscribe (Triggers browser prompt)
+                // This line triggers the iOS Permission Prompt
                 const subscription = await registration.pushManager.subscribe({
                     userVisibleOnly: true,
-                    applicationServerKey: urlBase64ToUint8Array(publicKey)
+                    applicationServerKey: urlBase64ToUint8Array(VAPID_PUBLIC_KEY)
                 });
 
-                // 4. Send Subscription to Python App
+                // Send to Python
                 await fetch(`${cleanTunnelUrl}/save-subscription`, {
                     method: 'POST',
                     headers: { 'Content-Type': 'application/json' },
                     body: JSON.stringify(subscription)
                 });
                 
-                alert("Notifications Enabled!");
-                document.getElementById('notify-fab').style.display = 'none';
+                // --- SUCCESS: Tell the Iframe to update the icon ---
+                const iframe = document.getElementById('app-frame');
+                iframe.contentWindow.postMessage({ type: 'NOTIFICATIONS_ENABLED' }, '*');
 
             } catch (error) {
                 console.error("Notification setup failed:", error);
-                alert("Setup Failed: " + error.message);
+                alert("Notification Error: " + error.message);
             }
         }
 
