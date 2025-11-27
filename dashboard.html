@@ -76,7 +76,7 @@
             color: #f0e3c5;
         }
 
-        /* --- NEW: Floating Notification Button --- */
+        /* Floating Notification Button */
         #notify-fab {
             position: fixed;
             bottom: 20px;
@@ -119,8 +119,12 @@
     </button>
 
     <script>
+        // --- HARDCODED VAPID PUBLIC KEY ---
+        const VAPID_PUBLIC_KEY = "BN3jhQwWibJ7M8yzndwuKcIZjXGH4b9cAFnTbRfNL1ZjtWKkI8Pl9X8T0htyPodhKvqcsD-Dy-gySUPZk85ZoDY";
+        
         let currentTunnelUrl = ""; // Store URL globally for the button
 
+        // Listen for Token from Iframe
         window.addEventListener('message', (event) => {
             if (event.data && event.data.type === 'SAVE_TOKEN') {
                 if (event.data.token) {
@@ -157,6 +161,7 @@
                 }
             });
 
+            // Farm Name Recovery
             if (!farmName) {
                 try {
                     const userData = localStorage.getItem('loggedInUser');
@@ -172,8 +177,9 @@
                 return;
             }
 
+            // Tunnel Loading Logic
             const loadTunnel = (url) => {
-                currentTunnelUrl = url; // Save for button usage
+                currentTunnelUrl = url; 
                 statusText.textContent = "Loading Dashboard...";
                 
                 const savedAppToken = localStorage.getItem('stallMonitorAppToken');
@@ -250,20 +256,16 @@
                 const registration = await navigator.serviceWorker.register('/service-worker.js');
                 console.log("SW Registered");
 
-                // 2. Get Key (User gesture makes this fetch safe)
-                const keyResponse = await fetch(`${cleanTunnelUrl}/api/vapid-key`);
-                if(!keyResponse.ok) throw new Error("Failed to fetch VAPID key from app");
-                
-                const keyData = await keyResponse.json();
-                if (!keyData.publicKey) throw new Error("VAPID key missing in response");
+                // 2. Use Hardcoded Key (No network fetch, preserving user gesture)
+                const publicKey = VAPID_PUBLIC_KEY;
 
-                // 3. Subscribe (This triggers the browser prompt)
+                // 3. Subscribe (Triggers browser prompt)
                 const subscription = await registration.pushManager.subscribe({
                     userVisibleOnly: true,
-                    applicationServerKey: urlBase64ToUint8Array(keyData.publicKey)
+                    applicationServerKey: urlBase64ToUint8Array(publicKey)
                 });
 
-                // 4. Send to Python
+                // 4. Send Subscription to Python App
                 await fetch(`${cleanTunnelUrl}/save-subscription`, {
                     method: 'POST',
                     headers: { 'Content-Type': 'application/json' },
@@ -275,7 +277,7 @@
 
             } catch (error) {
                 console.error("Notification setup failed:", error);
-                alert("Could not enable notifications. Check that your desktop app is running.");
+                alert("Setup Failed: " + error.message);
             }
         }
 
