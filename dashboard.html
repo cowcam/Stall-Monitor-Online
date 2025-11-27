@@ -11,6 +11,7 @@
     <meta name="theme-color" content="#242730">
     <meta name="apple-mobile-web-app-capable" content="yes">
     <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/@mdi/font@7.4.47/css/materialdesignicons.min.css">
 
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@400;500;600&display=swap" rel="stylesheet">
@@ -21,7 +22,6 @@
             padding: 0;
             height: 100%;
             width: 100%;
-            /* Removed overflow:hidden to allow panning when zoomed */
             background-color: #242730;
             font-family: 'Poppins', sans-serif;
             color: rgb(240, 227, 197);
@@ -75,6 +75,29 @@
             background-color: #4a4f60;
             color: #f0e3c5;
         }
+
+        /* --- NEW: Floating Notification Button --- */
+        #notify-fab {
+            position: fixed;
+            bottom: 20px;
+            right: 20px;
+            width: 56px;
+            height: 56px;
+            border-radius: 50%;
+            background-color: #f0e3c5;
+            color: #242730;
+            display: none; /* Hidden by default */
+            align-items: center;
+            justify-content: center;
+            box-shadow: 0 4px 10px rgba(0,0,0,0.3);
+            cursor: pointer;
+            z-index: 100;
+            border: none;
+            font-size: 24px;
+        }
+        #notify-fab:active {
+            transform: scale(0.95);
+        }
     </style>
 </head>
 <body>
@@ -91,12 +114,16 @@
 
     <iframe id="app-frame" sandbox="allow-forms allow-scripts allow-same-origin allow-popups allow-modals"></iframe>
 
+    <button id="notify-fab" title="Enable Alerts">
+        <span class="mdi mdi-bell-ring-outline"></span>
+    </button>
+
     <script>
-        // --- 1. Listen for Token from Iframe (Login Sync) ---
+        let currentTunnelUrl = ""; // Store URL globally for the button
+
         window.addEventListener('message', (event) => {
             if (event.data && event.data.type === 'SAVE_TOKEN') {
                 if (event.data.token) {
-                    console.log("Saving token to permanent storage");
                     localStorage.setItem('stallMonitorAppToken', event.data.token);
                 }
             }
@@ -119,21 +146,25 @@
             const loader = document.getElementById('loader-layer');
             const retryBtn = document.getElementById('retry-btn');
             const logoutBtn = document.getElementById('logout-btn');
+            const notifyBtn = document.getElementById('notify-fab');
 
-            // --- 2. Farm Name Recovery ---
+            // Setup Notification Button Click Handler
+            notifyBtn.addEventListener('click', () => {
+                if(currentTunnelUrl) {
+                    setupNotifications(currentTunnelUrl);
+                } else {
+                    alert("Waiting for tunnel connection...");
+                }
+            });
+
             if (!farmName) {
                 try {
                     const userData = localStorage.getItem('loggedInUser');
                     if (userData) {
                         const parsed = JSON.parse(userData);
-                        if (parsed.farmName) {
-                            farmName = parsed.farmName;
-                            console.log("Restored farm name from storage:", farmName);
-                        }
+                        if (parsed.farmName) farmName = parsed.farmName;
                     }
-                } catch (e) {
-                    console.error("Error reading local storage:", e);
-                }
+                } catch (e) { console.error(e); }
             }
 
             if (!farmName) {
@@ -141,11 +172,10 @@
                 return;
             }
 
-            // --- 3. Load Tunnel & Setup Notifications ---
             const loadTunnel = (url) => {
+                currentTunnelUrl = url; // Save for button usage
                 statusText.textContent = "Loading Dashboard...";
                 
-                // Inject Token for Auto-Login
                 const savedAppToken = localStorage.getItem('stallMonitorAppToken');
                 if (savedAppToken) {
                     const separator = url.includes('?') ? '&' : '?';
@@ -158,10 +188,12 @@
                     setTimeout(() => {
                         loader.style.display = 'none';
                         iframe.style.display = 'block';
+                        
+                        // Check if we need to show the notification button
+                        checkNotificationPermission();
                     }, 500);
                 };
                 
-                // Timeout Handler
                 setTimeout(() => {
                     if (loader.style.display !== 'none') {
                         subText.textContent = "Taking longer than expected...";
@@ -169,19 +201,14 @@
                         logoutBtn.style.display = "inline-block";
                     }
                 }, 8000);
-
-                // Trigger Push Notification Setup
-                setupNotifications(url);
             };
 
-            // --- 4. Fetch URL from Cloud ---
             statusText.textContent = `Locating ${farmName}...`;
             
             fetch(`https://my-backend.stallmonitor.workers.dev/api/get-tunnel?farm=${encodeURIComponent(farmName)}`)
                 .then(res => res.json())
                 .then(data => {
                     if (data.tunnel_url) {
-                        console.log("Tunnel found:", data.tunnel_url);
                         loadTunnel(data.tunnel_url);
                     } else {
                         throw new Error("No tunnel active");
@@ -201,49 +228,57 @@
                 });
         });
 
-        // --- 5. Push Notification Logic ---
-        async function setupNotifications(tunnelFullUrl) {
-            if (!('serviceWorker' in navigator) || !('PushManager' in window)) {
-                console.log("Push notifications not supported");
-                return;
-            }
+        function checkNotificationPermission() {
+            if (!('serviceWorker' in navigator) || !('PushManager' in window)) return;
 
-            // Clean the URL (remove ?authtoken=... if present)
+            // Only show button if permission is default (ask) or denied (to retry)
+            if (Notification.permission !== 'granted') {
+                document.getElementById('notify-fab').style.display = 'flex';
+            } else {
+                document.getElementById('notify-fab').style.display = 'none';
+            }
+        }
+
+        async function setupNotifications(tunnelFullUrl) {
+            if (!('serviceWorker' in navigator)) return;
+
+            // Clean the URL 
             const cleanTunnelUrl = tunnelFullUrl.split('?')[0];
 
             try {
-                // Register Service Worker on THIS domain (stallmonitor.com)
-                // Ensure service-worker.js is in the same folder on your server!
+                // 1. Register SW
                 const registration = await navigator.serviceWorker.register('/service-worker.js');
-                console.log("Service Worker Registered");
+                console.log("SW Registered");
 
-                // Fetch VAPID Key from Python App via Tunnel
+                // 2. Get Key (User gesture makes this fetch safe)
                 const keyResponse = await fetch(`${cleanTunnelUrl}/api/vapid-key`);
-                const keyData = await keyResponse.json();
+                if(!keyResponse.ok) throw new Error("Failed to fetch VAPID key from app");
                 
-                if (!keyData.publicKey) return;
+                const keyData = await keyResponse.json();
+                if (!keyData.publicKey) throw new Error("VAPID key missing in response");
 
-                // Subscribe User
+                // 3. Subscribe (This triggers the browser prompt)
                 const subscription = await registration.pushManager.subscribe({
                     userVisibleOnly: true,
                     applicationServerKey: urlBase64ToUint8Array(keyData.publicKey)
                 });
 
-                // Send Subscription back to Python App via Tunnel
+                // 4. Send to Python
                 await fetch(`${cleanTunnelUrl}/save-subscription`, {
                     method: 'POST',
                     headers: { 'Content-Type': 'application/json' },
                     body: JSON.stringify(subscription)
                 });
                 
-                console.log("Push Notification Subscription Saved!");
+                alert("Notifications Enabled!");
+                document.getElementById('notify-fab').style.display = 'none';
 
             } catch (error) {
                 console.error("Notification setup failed:", error);
+                alert("Could not enable notifications. Check that your desktop app is running.");
             }
         }
 
-        // Helper: VAPID Key Conversion
         function urlBase64ToUint8Array(base64String) {
             const padding = '='.repeat((4 - base64String.length % 4) % 4);
             const base64 = (base64String + padding).replace(/-/g, '+').replace(/_/g, '/');
