@@ -1,0 +1,125 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Contact Us - Stall Monitor</title>
+    <link rel="icon" href="/assets/stallmonitor.png" type="image/png">
+    
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@400;500;600&display=swap" rel="stylesheet">
+    
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0-beta3/css/all.min.css">
+    
+    <link rel="stylesheet" href="/assets/style.css">
+</head>
+<body class="contact-page">
+    <header class="header">
+        <img src="/assets/stallmonitor.png" alt="Stall Monitor Logo">
+        <h1>Stall Monitor</h1>
+        <div class="user-menu">
+            <i class="fas fa-user-circle"></i>
+            <div class="dropdown-content">
+                <a href="/index.html">Sign In</a>
+                <a href="/index.html">Sign Up</a>
+                <a href="/cancel.html">Unsubscribe</a>
+            </div>
+        </div>
+    </header>
+
+    <div class="hero-container">
+        <div class="hero-content">
+            <h1>24/7 Cow Behaviour Analysis</h1>
+        </div>
+    </div>
+
+    <div class="main-content">
+        <div class="form-container">
+            <h2>Contact Us</h2>
+            <p>Have a question or need support? Fill out the form below and we'll get back to you as soon as possible.</p>
+            <form id="contact-form">
+                <div class="form-group">
+                    <label for="contact-name">Your Name</label>
+                    <input type="text" id="contact-name" required>
+                </div>
+                <div class="form-group">
+                    <label for="contact-email">Your Email</label>
+                    <input type="email" id="contact-email" required>
+                </div>
+                <div class="form-group">
+                    <label for="contact-message">Message</label>
+                    <textarea id="contact-message" rows="5" required></textarea>
+                </div>
+                <button type="submit">Send Message</button>
+                <p id="contact-form-message" class="message"></p>
+            </form>
+        </div>
+    </div>
+
+    <script>
+        const WORKER_URL = 'https://my-backend.stallmonitor.workers.dev';
+        const contactForm = document.getElementById('contact-form');
+        const messageArea = document.getElementById('contact-form-message');
+        const userMenu = document.querySelector('.user-menu');
+        const dropdownContent = document.querySelector('.dropdown-content');
+
+        userMenu.addEventListener('click', (event) => {
+            event.stopPropagation();
+            dropdownContent.classList.toggle('dropdown-active');
+        });
+
+        window.addEventListener('click', (event) => {
+            if (!userMenu.contains(event.target)) {
+                dropdownContent.classList.remove('dropdown-active');
+            }
+        });
+
+        contactForm.addEventListener('submit', async (event) => {
+            event.preventDefault();
+            messageArea.textContent = 'Sending...';
+            messageArea.className = 'message';
+
+            const name = document.getElementById('contact-name').value;
+            const email = document.getElementById('contact-email').value;
+            const message = document.getElementById('contact-message').value;
+
+            try {
+                const response = await fetch(`${WORKER_URL}/api/contact`, {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ name, email, message })
+                });
+
+                const data = await response.json();
+
+                if (response.ok) {
+                    messageArea.textContent = 'Message sent successfully!';
+                    messageArea.classList.add('success');
+                    contactForm.reset();
+                } else {
+                    messageArea.textContent = data.error || 'An unknown error occurred.';
+                    messageArea.classList.add('error');
+                }
+            } catch (error) {
+                console.error('Contact form fetch failed:', error);
+                messageArea.textContent = 'Could not connect to the server.';
+                messageArea.classList.add('error');
+            }
+        });
+    </script>
+    
+    <footer class="footer">
+        <div class="footer-content">
+            <div class="footer-text">
+                <p>&copy; 2025 Stall Monitor. All rights reserved.</p>
+                <p>All images in this site are real world detections made by Stall Monitor.</p>
+            </div>
+            <nav class="footer-links">
+                <a href="/index.html">Home</a>
+                <a href="/cancel.html">Unsubscribe</a>
+                <a href="/contact.html">Contact</a>
+            </nav>
+        </div>
+    </footer>
+</body>
+</html>

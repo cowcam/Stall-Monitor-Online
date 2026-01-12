@@ -1,0 +1,211 @@
+<!DOCTYPE html>
+<html>
+  <head>
+    <title>Subscribe to a cool new product</title>
+    <link rel="stylesheet" href="style.css">
+    <script src="https://js.stripe.com/clover/stripe.js"></script>
+        <style>
+        :root {
+            --text-color: rgb(240, 227, 197);
+            --bg-color: rgb(36, 39, 48);
+            --card-color: rgb(56, 61, 79);
+            --border-color: #4a4f60;
+            --success-color: #4CAF50;
+            --error-color: #F44336;
+        }
+
+        body {
+            margin: 0;
+            font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
+            background-color: var(--bg-color);
+            color: var(--text-color);
+            text-align: center;
+        }
+
+        .header {
+            width: 100%;
+            background-color: var(--bg-color);
+            padding: 15px 30px;
+            box-sizing: border-box;
+            display: flex;
+            align-items: center;
+            /* This is the changed property to align header content to the left */
+            justify-content: flex-start;
+            border-bottom: 1px solid var(--border-color);
+        }
+
+        .header img {
+            height: 50px;
+            margin-right: 20px;
+        }
+
+        .header h1 {
+            font-size: 1.8em;
+            margin: 0;
+            font-weight: 500;
+        }
+
+        .main-content {
+            padding: 40px 20px;
+            max-width: 800px;
+            margin: 0 auto;
+        }
+
+        .tagline {
+            font-size: 1.5em;
+            font-weight: 300;
+            color: var(--text-color);
+            opacity: 0.9;
+            margin-bottom: 40px;
+        }
+
+        .video-container {
+            width: 100%;
+            max-width: 800px;
+            margin: 0 auto 40px auto;
+            border-radius: 12px;
+            overflow: hidden;
+            border: 1px solid var(--border-color);
+            box-shadow: 0 8px 25px rgba(0, 0, 0, 0.3);
+        }
+
+        video {
+            width: 100%;
+            display: block;
+        }
+
+        .form-container {
+            background-color: var(--card-color);
+            padding: 30px 40px;
+            border-radius: 12px;
+            border: 1px solid var(--border-color);
+            box-shadow: 0 4px 15px rgba(0, 0, 0, 0.2);
+            width: 100%;
+            max-width: 450px;
+            text-align: center;
+            margin: 0 auto;
+        }
+
+        .tab-buttons {
+            display: flex;
+            border-bottom: 1px solid var(--border-color);
+            margin-bottom: 30px;
+        }
+
+        .tab-button {
+            flex: 1;
+            padding: 15px;
+            border: none;
+            background: none;
+            color: var(--text-color);
+            font-size: 1.1em;
+            cursor: pointer;
+            opacity: 0.6;
+            border-bottom: 3px solid transparent;
+            transition: opacity 0.3s, border-color 0.3s;
+        }
+
+        .tab-button.active {
+            opacity: 1;
+            border-bottom-color: var(--text-color);
+        }
+
+        .form-section {
+            display: none;
+        }
+        .checkbox-group {
+            display: flex;
+            align-items: center; /* Vertically align items */
+            justify-content: flex-start; /* Align items to the left */
+            gap: 5px; /* Add a small gap between checkbox and label */
+            margin-top: 15px;
+            margin-bottom: 20px; /* Add some space below */
+        }
+        .checkbox-group input[type="checkbox"] {
+            width: auto; /* Let checkbox size itself */
+            margin: 0; /* Remove default margins */
+            flex-shrink: 0; /* Prevent checkbox from shrinking */
+        }
+        .checkbox-group label {
+            margin-bottom: 0; /* Remove bottom margin from label */
+            white-space: nowrap; /* Prevent label text from wrapping */
+            flex-grow: 1; /* Allow label to take remaining space if needed */
+            text-align: left; /* Ensure label text is left-aligned */
+        }
+
+        .form-section.active {
+            display: block;
+        }
+        
+        .form-group { margin-bottom: 20px; text-align: left; }
+        label { display: block; margin-bottom: 8px; font-size: 0.9em; opacity: 0.8; }
+        input { width: 100%; padding: 12px; background-color: var(--bg-color); border: 1px solid var(--border-color); border-radius: 6px; color: var(--text-color); font-size: 1em; box-sizing: border-box; }
+        input:focus { outline: none; border-color: var(--text-color); }
+        button[type="submit"] { width: 100%; padding: 14px; border: none; border-radius: 6px; background-color: var(--text-color); color: var(--bg-color); font-size: 1.1em; font-weight: bold; cursor: pointer; margin-top: 10px; }
+        .message { margin-top: 20px; font-weight: 500; min-height: 1em; }
+        .success { color: var(--success-color); }
+        .error { color: var(--error-color); }
+        .checkbox-group { display: flex; align-items: center; justify-content: flex-start; gap: 10px; margin-top: 15px; }
+
+        /* Modal Styles */
+        .modal-overlay {
+            position: fixed; top: 0; left: 0; right: 0; bottom: 0; background: rgba(0, 0, 0, 0.7);
+            display: none; align-items: center; justify-content: center; z-index: 1000;
+        }
+        .modal-container {
+            background-color: var(--card-color); padding: 40px; border-radius: 12px;
+            border: 1px solid var(--border-color); box-shadow: 0 4px 15px rgba(0, 0, 0, 0.2);
+            width: 100%; max-width: 400px; text-align: center;
+        }
+        .modal-container h2 { margin-top: 0; margin-bottom: 20px; font-weight: 500; }
+        .modal-container p { line-height: 1.6; opacity: 0.9; }
+        .modal-container button { width: 100%; padding: 14px; border: none; border-radius: 6px; background-color: var(--text-color); color: var(--bg-color); font-size: 1.1em; font-weight: bold; cursor: pointer; margin-top: 20px; }
+    </style>
+  </head>
+  <body>
+    <section>
+      <div class="product">
+        <svg xmlns="http://www.w3.org/2000/svg" xmlns:xlink="http://www.w3.org/1999/xlink" width="14px" height="16px" viewBox="0 0 14 16" version="1.1">
+            <defs/>
+            <g id="Flow" stroke="none" stroke-width="1" fill="none" fill-rule="evenodd">
+                <g id="0-Default" transform="translate(-121.000000, -40.000000)" fill="#E184DF">
+                    <path d="M127,50 L126,50 C123.238576,50 121,47.7614237 121,45 C121,42.2385763 123.238576,40 126,40 L135,40 L135,56 L133,56 L133,42 L129,42 L129,56 L127,56 L127,50 Z M127,48 L127,42 L126,42 C124.343146,42 123,43.3431458 123,45 C123,46.6568542 124.343146,48 126,48 L127,48 Z" id="Pilcrow"/>
+                </g>
+            </g>
+        </svg>
+        <div class="description">
+          <h3>Stall Monitor</h3>
+          <h5>CA$30.00 / month</h5>
+        </div>
+      </div>
+      <form action="/create-checkout-session" method="POST">
+        <!-- Add a hidden field with the lookup_key of your Price -->
+        <input type="hidden" name="lookup_key" value="Stall_Monitor-d1a2054" />
+        <button id="checkout-and-portal-button" type="submit">Checkout</button>
+      </form>
+    </section>
+    <footer class="footer">
+        <div class="footer-content">
+            <p>&copy; 2025 Stall Monitor. All rights reserved.</p>
+            <nav class="footer-links">
+                <a href="/index.html">Home</a>
+                <a href="/cancel.html">Unsubscribe</a>
+                <a href="#" id="contact-link">Contact</a>
+                </nav>
+        </div>
+    </footer>
+
+    <script>
+        // Anti-spam contact link
+        const contactLink = document.getElementById('contact-link');
+        if (contactLink) {
+            contactLink.addEventListener('click', function(event) {
+                event.preventDefault();
+                const user = 'info';
+                const domain = 'stallmonitor.com';
+                window.location.href = 'mailto:' + user + '@' + domain;
+            });
+        }
+    </script>
+  </body>
+</html>

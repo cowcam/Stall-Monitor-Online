@@ -17,4 +17,7 @@ id = "40210a36ce4a4e7a8b662c01d49bbd2f"
 pattern = "*.stallmonitor.com/*"
 zone_id = "5aeca7f6e29e5f6a4c3f22a45e9fc155"
 
+[site]
+bucket = "./public"
+
 

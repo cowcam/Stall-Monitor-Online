@@ -1,0 +1,435 @@
+/* --- Global Variables & Reset --- */
+:root {
+    --text-color: rgb(240, 227, 197);
+    --bg-color: rgb(36, 39, 48);
+    --card-color: rgb(56, 61, 79);
+    --border-color: #4a4f60;
+    --success-color: #4CAF50;
+    --error-color: #F44336;
+}
+
+body {
+    margin: 0;
+    font-family: 'Poppins', -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
+    background-color: var(--bg-color);
+    color: var(--text-color);
+    text-align: center;
+}
+
+/* --- Header & Navigation --- */
+.header {
+    width: 100%;
+    background-color: var(--bg-color);
+    padding: 15px 30px;
+    box-sizing: border-box;
+    display: flex;
+    align-items: center;
+    justify-content: flex-start;
+    border-bottom: 1px solid var(--border-color);
+    flex-wrap: wrap; 
+}
+
+.header img {
+    height: 50px;
+    margin-right: 20px;
+}
+
+.header h1 {
+    font-size: 1.8em;
+    margin: 0;
+    font-weight: 500;
+}
+
+.tagline-header {
+    font-size: 1.8em;
+    font-weight: 500;
+    color: var(--text-color);
+    margin-left: 20px;
+}
+
+/* User Menu & Dropdown */
+.user-menu {
+    position: relative;
+    margin-left: auto;
+}
+
+.user-menu .fa-user-circle {
+    font-size: 2em;
+    cursor: pointer;
+}
+
+.dropdown-content {
+    display: none;
+    position: absolute;
+    right: 0;
+    background-color: var(--card-color);
+    min-width: 160px;
+    box-shadow: 0px 8px 16px 0px rgba(0,0,0,0.2);
+    z-index: 100;
+    border-radius: 6px;
+    overflow: hidden;
+}
+
+.dropdown-content a {
+    color: var(--text-color);
+    padding: 12px 16px;
+    text-decoration: none;
+    display: block;
+    text-align: left;
+}
+
+.dropdown-content a:hover {
+    background-color: var(--bg-color);
+}
+
+.dropdown-content.dropdown-active {
+    display: block;
+}
+
+/* --- Hero Section --- */
+.hero-container {
+    background: var(--bg-color);
+    padding: 80px 20px 20px;
+    text-align: center;
+}
+
+.hero-content {
+    max-width: 800px;
+    margin: 0 auto;
+}
+
+.hero-content h1 {
+    font-size: 3em;
+    font-weight: 600;
+    color: var(--text-color);
+    margin: 0 0 20px 0;
+}
+
+.hero-subtext {
+    font-size: 1.2em;
+    opacity: 0.9;
+    line-height: 1.6;
+    margin-bottom: 40px;
+}
+
+.cta-button {
+    background-color: var(--text-color);
+    color: var(--bg-color);
+    font-size: 1.1em;
+    font-weight: bold;
+    padding: 15px 30px;
+    border: none;
+    border-radius: 6px;
+    cursor: pointer;
+    transition: transform 0.2s;
+    text-decoration: none;
+    display: inline-block;
+}
+
+.cta-button:hover {
+    transform: scale(1.05);
+}
+
+/* --- Main Layout --- */
+.main-content {
+    padding: 40px 20px;
+    max-width: 1100px;
+    margin: 0 auto;
+}
+
+.video-container {
+    width: 100%;
+    max-width: 1100px;
+    margin: 60px auto 40px auto;
+    border-radius: 12px;
+    overflow: hidden;
+    border: 1px solid var(--border-color);
+    box-shadow: 0 8px 25px rgba(0, 0, 0, 0.3);
+}
+
+video {
+    width: 100%;
+    display: block;
+}
+
+/* --- Features Grid --- */
+.feature-grid {
+    display: flex;
+    flex-direction: column;
+    gap: 40px;
+    margin-top: 20px;
+}
+
+.feature-item {
+    display: flex;
+    align-items: center;
+    gap: 30px;
+}
+
+.feature-item.reverse {
+    flex-direction: row-reverse;
+}
+
+.feature-image {
+    flex: 2;
+}
+
+.feature-image img {
+    width: 100%;
+    border-radius: 8px;
+}
+
+.feature-description {
+    flex: 1;
+    text-align: center;
+}
+
+.feature-description h3 {
+    font-size: 1.8em;
+    font-weight: 500;
+    color: var(--text-color);
+}
+
+/* --- Form Elements (Inputs & Textarea) --- */
+.form-container {
+    background-color: var(--card-color);
+    padding: 30px 40px;
+    border-radius: 12px;
+    border: 1px solid var(--border-color);
+    box-shadow: 0 4px 15px rgba(0, 0, 0, 0.2);
+    width: 100%;
+    max-width: 450px;
+    text-align: center;
+    margin: 0 auto;
+}
+
+.form-group { 
+    margin-bottom: 20px; 
+    text-align: left; 
+    width: 100%;
+}
+
+label { 
+    display: block; 
+    margin-bottom: 8px; 
+    font-size: 0.9em; 
+    opacity: 0.8; 
+}
+
+/* FIX: Ensure Inputs and Textareas use the correct font and width */
+input, textarea { 
+    width: 100%; 
+    padding: 12px; 
+    background-color: var(--bg-color); 
+    border: 1px solid var(--border-color); 
+    border-radius: 6px; 
+    color: var(--text-color); 
+    font-size: 1rem; /* Readable font size */
+    box-sizing: border-box; 
+    /* Force the Poppins font so it doesn't look different */
+    font-family: 'Poppins', -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
+}
+
+/* FIX: Make the message box tall */
+textarea {
+    resize: vertical;
+    min-height: 150px;
+}
+
+input:focus, textarea:focus { 
+    outline: none; 
+    border-color: var(--text-color); 
+}
+
+button[type="submit"] { 
+    width: 100%; 
+    padding: 14px; 
+    border: none; 
+    border-radius: 6px; 
+    background-color: var(--text-color); 
+    color: var(--bg-color); 
+    font-size: 1.1em; 
+    font-weight: bold; 
+    cursor: pointer; 
+    margin-top: 10px; 
+}
+
+/* --- Tabs & Checkboxes --- */
+.tab-buttons {
+    display: flex;
+    border-bottom: 1px solid var(--border-color);
+    margin-bottom: 30px;
+}
+
+.tab-button {
+    flex: 1;
+    padding: 15px;
+    border: none;
+    background: none;
+    color: var(--text-color);
+    font-size: 1.1em;
+    cursor: pointer;
+    opacity: 0.6;
+    border-bottom: 3px solid transparent;
+    transition: opacity 0.3s, border-color 0.3s;
+}
+
+.tab-button.active {
+    opacity: 1;
+    border-bottom-color: var(--text-color);
+}
+
+.form-section {
+    display: none;
+}
+
+.form-section.active {
+    display: block;
+}
+
+.checkbox-group {
+    display: flex;
+    align-items: center;
+    justify-content: flex-start;
+    gap: 10px;
+    margin-top: 15px;
+    margin-bottom: 20px;
+}
+
+.checkbox-group input[type="checkbox"] {
+    width: auto;
+    margin: 0;
+    flex-shrink: 0;
+}
+
+.checkbox-group label {
+    margin-bottom: 0;
+    white-space: nowrap;
+    flex-grow: 1;
+    text-align: left;
+}
+
+.message { 
+    margin-top: 20px; 
+    font-weight: 500; 
+    min-height: 1em; 
+}
+
+.success { color: var(--success-color); }
+.error { color: var(--error-color); }
+
+/* --- Modals --- */
+.modal-overlay {
+    position: fixed; 
+    top: 0; 
+    left: 0; 
+    right: 0; 
+    bottom: 0; 
+    background: rgba(0, 0, 0, 0.7);
+    display: none; 
+    align-items: center; 
+    justify-content: center; 
+    z-index: 1000;
+}
+
+.modal-container {
+    background-color: var(--card-color); 
+    padding: 40px; 
+    border-radius: 12px;
+    border: 1px solid var(--border-color); 
+    box-shadow: 0 4px 15px rgba(0, 0, 0, 0.2);
+    width: 100%; 
+    max-width: 400px; 
+    text-align: center;
+}
+
+.modal-container h2 { margin-top: 0; margin-bottom: 20px; font-weight: 500; }
+.modal-container p { line-height: 1.6; opacity: 0.9; }
+
+/* --- Footer --- */
+.footer {
+    width: 100%;
+    background-color: var(--card-color);
+    padding: 30px 20px;
+    box-sizing: border-box;
+    margin-top: 80px;
+    border-top: 1px solid var(--border-color);
+}
+
+.footer-content {
+    max-width: 1100px;
+    margin: 0 auto;
+    display: flex;
+    justify-content: space-between; /* Pushes text left, links right */
+    align-items: center;
+    flex-wrap: wrap;
+    gap: 20px;
+}
+
+/* Wrapper for the copyright and fine print to align left */
+.footer-text {
+    display: flex;
+    flex-direction: column;
+    align-items: flex-start; /* Forces text to align left */
+    text-align: left;        /* Double insurance for text alignment */
+    gap: 5px;
+}
+
+.footer-text p {
+    margin: 0;
+    opacity: 0.8;
+    font-size: 0.75rem; 
+    font-weight: 300;    
+    color: var(--text-color);
+}
+
+.footer-links {
+    display: flex;
+    gap: 25px;
+}
+
+.footer-links a {
+    color: var(--text-color);
+    text-decoration: none;
+    opacity: 0.8;
+    font-size: 0.9rem;
+}
+
+.footer-links a:hover {
+    opacity: 1;
+    text-decoration: underline;
+}
+
+/* --- Page Specific: Contact Page --- */
+.contact-page .form-container {
+    max-width: 600px; 
+    width: 100%;
+}
+
+.contact-page .main-content {
+    display: flex;
+    justify-content: center;
+}
+
+/* --- Mobile Responsiveness --- */
+@media (max-width: 768px) {
+    .feature-item, .feature-item.reverse {
+        flex-direction: column-reverse;
+    }
+    .hero-content h1 {
+        font-size: 2.2em;
+    }
+}
+
+@media (max-width: 600px) {
+    .footer-content {
+        flex-direction: column;
+        justify-content: center;
+        text-align: center;
+    }
+    
+    .footer-text {
+        align-items: center; /* On mobile, center the text */
+        text-align: center;
+    }
+}

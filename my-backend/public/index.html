@@ -1,0 +1,432 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Stall Monitor</title>
+    <link rel="icon" href="/assets/stallmonitor.png" type="image/png">
+
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@400;500;600&display=swap" rel="stylesheet">
+
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0-beta3/css/all.min.css">
+    <link rel="stylesheet" href="/assets/style.css">
+</head>
+
+<body>
+
+    <header class="header">
+        <img src="/assets/stallmonitor.png" alt="Stall Monitor Logo">
+        <h1>Stall Monitor</h1>
+        <div class="user-menu">
+            <i class="fas fa-user-circle"></i>
+            <div class="dropdown-content">
+                <a href="#" id="signin-link">Sign In</a>
+                <a href="#" id="signup-link">Sign Up</a>
+                <a href="/cancel.html" id="unsubscribe-link" style="display: none;">Unsubscribe</a>
+                <a href="#" id="signout-link" style="display: none;">Sign Out</a>
+            </div>
+        </div>
+    </header>
+
+    <div class="hero-container">
+        <div class="hero-content">
+            <h1>24/7 Cow Behaviour Analysis</h1>
+            <p class="hero-subtext">Built by a farmer, for farmers. Stall Monitor is currently in development. Get in
+                touch to try the latest version.</p>
+            <a href="/contact.html" id="hero-cta-button" class="cta-button"
+                style="text-decoration: none; display: inline-block;">Get In Touch</a>
+        </div>
+    </div>
+    <div class="main-content">
+
+        <section class="feature-grid">
+            <div class="feature-item">
+                <div class="feature-image">
+                    <img src="/assets/calvingalerts.jpg" alt="Calving Alerts">
+                </div>
+                <div class="feature-description">
+                    <h3>Calving Alerts</h3>
+                    <p>Healthy calf, healthy cow, peace of mind. Stall Monitor lets you act at the perfect time.</p>
+                </div>
+            </div>
+            <div class="feature-item reverse">
+                <div class="feature-image">
+                    <img src="/assets/heatalerts.jpg" alt="Heat Alerts">
+                </div>
+                <div class="feature-description">
+                    <h3>Heat Alerts</h3>
+                    <p>No neck straps, no bolus, no hassel. Simple, stress-free, and always on watch.</p>
+                </div>
+            </div>
+            <div class="feature-item">
+                <div class="feature-image">
+                    <img src="/assets/activitygraphs2.jpg" alt="Activity Graphs">
+                </div>
+                <div class="feature-description">
+                    <h3>Activity Graphs</h3>
+                    <p>Monitor behavior in real time with hourly and daily activity graphs. More confident timing.</p>
+                </div>
+            </div>
+            <div class="feature-item reverse">
+                <div class="feature-image">
+                    <img src="/assets/2imagequality.JPG" alt="Image Quality">
+                </div>
+                <div class="feature-description">
+                    <h3>Image Quality</h3>
+                    <p>No light? No problem. Stall Monitor can detect a heat even with poor lighting, obstructed view or
+                        poor visibility.</p>
+                </div>
+            </div>
+        </section>
+
+        <div id="auth-modal" class="modal-overlay">
+            <div class="modal-container">
+                <div class="form-container">
+                    <div class="tab-buttons">
+                        <button class="tab-button active" onclick="showForm('login')">Sign In</button>
+                        <button class="tab-button" onclick="showForm('register')">Sign Up</button>
+                    </div>
+
+                    <div id="login-form-section" class="form-section active">
+                        <form id="login-form">
+                            <div class="form-group">
+                                <label for="login-identifier">Email or Farm Name</label>
+                                <input type="text" id="login-identifier" required>
+                            </div>
+                            <div class="form-group">
+                                <label for="login-password">Password</label>
+                                <input type="password" id="login-password" required>
+                            </div>
+                            <div class="checkbox-group">
+                                <input type="checkbox" id="login-show-password" style="width: auto;">
+                                <label for="login-show-password">Show Password</label>
+                            </div>
+                            <div class="checkbox-group">
+                                <input type="checkbox" id="remember-me">
+                                <label for="remember-me">Remember Me</label>
+                            </div>
+                            <button type="submit">Log In</button>
+                            <p id="login-message" class="message"></p>
+                        </form>
+                    </div>
+
+                    <div id="register-form-section" class="form-section">
+                        <form id="register-form">
+                            <div class="form-group">
+                                <label for="register-email">Email Address</label>
+                                <input type="email" id="register-email" required>
+                            </div>
+                            <div class="form-group">
+                                <label for="register-farm-name">Farm Name</label>
+                                <input type="text" id="register-farm-name" required minlength="3" maxlength="50"
+                                    pattern="[a-zA-Z0-9\s-]+">
+                            </div>
+                            <div class="form-group">
+                                <label for="register-password">Password</label>
+                                <input type="password" id="register-password" required>
+                            </div>
+                            <div class="form-group">
+                                <label for="confirm-password">Confirm Password</label>
+                                <input type="password" id="confirm-password" required>
+                            </div>
+                            <div class="checkbox-group">
+                                <input type="checkbox" id="show-password" style="width: auto;">
+                                <label for="show-password">Show Password</label>
+                            </div>
+                            <button type="submit">Register</button>
+                            <p id="register-message" class="message"></p>
+                        </form>
+                    </div>
+                </div>
+            </div>
+        </div>
+        <div id="subscription-modal" class="modal-overlay">
+            <div class="modal-container">
+                <h2>Almost there!</h2>
+                <p>Your account has been created. Click below to activate your Stall Monitor Pro subscription.</p>
+                <form id="subscribe-form">
+                    <button type="submit" id="subscribe-button">Subscribe Now</button>
+                </form>
+            </div>
+        </div>
+
+        <script>
+            const WORKER_URL = 'https://my-backend.stallmonitor.workers.dev';
+            const loginFormSection = document.getElementById('login-form-section');
+            const registerFormSection = document.getElementById('register-form-section');
+            const tabButtons = document.querySelectorAll('.tab-button');
+            let registeredEmail = null;
+
+            // Helper to format farm name for subdomain (must match backend logic)
+            function toSlug(text) {
+                return text.toLowerCase().replace(/[^a-z0-9]/g, '_');
+            }
+
+            document.addEventListener('DOMContentLoaded', () => {
+                const signinLink = document.getElementById('signin-link');
+                const signupLink = document.getElementById('signup-link');
+                const unsubscribeLink = document.getElementById('unsubscribe-link');
+                const signoutLink = document.getElementById('signout-link');
+
+                const loggedInUser = localStorage.getItem('loggedInUser');
+
+                if (loggedInUser) {
+                    signinLink.style.display = 'none';
+                    signupLink.style.display = 'none';
+                    unsubscribeLink.style.display = 'block';
+                    signoutLink.style.display = 'block';
+                } else {
+                    signinLink.style.display = 'block';
+                    signupLink.style.display = 'block';
+                    unsubscribeLink.style.display = 'none';
+                    signoutLink.style.display = 'none';
+                }
+
+                signoutLink.addEventListener('click', (e) => {
+                    e.preventDefault();
+                    localStorage.removeItem('loggedInUser');
+                    localStorage.removeItem('stallMonitorRememberedUser');
+                    window.location.reload();
+                });
+
+                const currentPath = window.location.pathname;
+                if (currentPath !== '/' && currentPath !== '/index.html' && currentPath !== '/setup.html' && currentPath !== '/create-farm') {
+                    console.log('Already on a potential farm path, skipping auto-redirect check.');
+                } else {
+                    const rememberedUser = localStorage.getItem('stallMonitorRememberedUser');
+                    if (rememberedUser) {
+                        try {
+                            const userData = JSON.parse(rememberedUser);
+                            if (userData.farmName) {
+                                window.location.href = `https://${toSlug(userData.farmName)}.stallmonitor.com`;
+                            }
+                        } catch (e) {
+                            console.error('Error parsing remembered user data:', e);
+                            localStorage.removeItem('stallMonitorRememberedUser');
+                        }
+                    }
+                }
+            });
+
+            const userMenu = document.querySelector('.user-menu');
+            const dropdownContent = document.querySelector('.dropdown-content');
+
+            userMenu.addEventListener('click', (event) => {
+                event.stopPropagation();
+                dropdownContent.classList.toggle('dropdown-active');
+            });
+
+            window.addEventListener('click', (event) => {
+                if (!userMenu.contains(event.target)) {
+                    dropdownContent.classList.remove('dropdown-active');
+                }
+            });
+
+            const authModal = document.getElementById('auth-modal');
+            const signinLink = document.getElementById('signin-link');
+            const signupLink = document.getElementById('signup-link');
+
+            signinLink.addEventListener('click', (e) => {
+                e.preventDefault();
+                showForm('login');
+                authModal.style.display = 'flex';
+            });
+
+            signupLink.addEventListener('click', (e) => {
+                e.preventDefault();
+                showForm('register');
+                authModal.style.display = 'flex';
+            });
+
+            authModal.addEventListener('click', (e) => {
+                if (e.target === authModal) {
+                    authModal.style.display = 'none';
+                }
+            });
+
+            function showForm(formName) {
+                if (formName === 'login') {
+                    loginFormSection.classList.add('active'); registerFormSection.classList.remove('active');
+                    tabButtons[0].classList.add('active'); tabButtons[1].classList.remove('active');
+                } else {
+                    loginFormSection.classList.remove('active'); registerFormSection.classList.add('active');
+                    tabButtons[0].classList.remove('active'); tabButtons[1].classList.add('active');
+                }
+            }
+
+            // --- Login Form Logic ---
+            const loginForm = document.getElementById('login-form');
+            const loginIdentifierInput = document.getElementById('login-identifier');
+            const loginPasswordInput = document.getElementById('login-password');
+            const rememberMeCheckbox = document.getElementById('remember-me');
+            const loginMessageArea = document.getElementById('login-message');
+
+            loginForm.addEventListener('submit', async (event) => {
+                event.preventDefault();
+                loginMessageArea.textContent = 'Logging in...';
+                loginMessageArea.className = 'message';
+
+                const identifier = loginIdentifierInput.value;
+                const password = loginPasswordInput.value;
+                const rememberMe = rememberMeCheckbox.checked;
+
+                try {
+                    const response = await fetch(`${WORKER_URL}/login`, {
+                        method: 'POST',
+                        headers: { 'Content-Type': 'application/json' },
+                        body: JSON.stringify({ identifier: identifier, password: password })
+                    });
+
+                    const data = await response.json();
+
+                    if (response.ok) {
+                        const farmName = data.farm_name;
+                        const userEmail = data.email;
+                        const token = data.token;
+
+                        const userData = JSON.stringify({ farmName: farmName, email: userEmail, token: token });
+                        localStorage.setItem('loggedInUser', userData);
+
+                        if (rememberMe) {
+                            localStorage.setItem('stallMonitorRememberedUser', userData);
+                        } else {
+                            localStorage.removeItem('stallMonitorRememberedUser');
+                        }
+
+                        if (farmName && farmName.trim() !== '') {
+                            window.location.href = `https://${toSlug(farmName)}.stallmonitor.com`;
+                        } else {
+                            window.location.href = '/setup';
+                        }
+                    } else {
+                        loginMessageArea.textContent = data.error || 'An unknown error occurred.';
+                        loginMessageArea.className = 'message error';
+                    }
+                } catch (error) {
+                    console.error('Fetch failed:', error);
+                    loginMessageArea.textContent = 'Could not connect to the server.';
+                    loginMessageArea.className = 'message error';
+                }
+            });
+
+            // --- Registration Form Logic ---
+            const registerForm = document.getElementById('register-form');
+            const registerEmailInput = document.getElementById('register-email');
+            const registerFarmNameInput = document.getElementById('register-farm-name');
+            const registerPasswordInput = document.getElementById('register-password');
+            const confirmPasswordInput = document.getElementById('confirm-password');
+            const showPasswordCheckbox = document.getElementById('show-password');
+            const registerMessageArea = document.getElementById('register-message');
+
+            const loginShowPasswordCheckbox = document.getElementById('login-show-password');
+
+            showPasswordCheckbox.addEventListener('change', () => {
+                const type = showPasswordCheckbox.checked ? 'text' : 'password';
+                registerPasswordInput.type = type;
+                confirmPasswordInput.type = type;
+            });
+
+            loginShowPasswordCheckbox.addEventListener('change', () => {
+                const type = loginShowPasswordCheckbox.checked ? 'text' : 'password';
+                loginPasswordInput.type = type;
+            });
+
+            registerForm.addEventListener('submit', async (event) => {
+                event.preventDefault();
+                const email = registerEmailInput.value;
+                const farmName = registerFarmNameInput.value;
+                const password = registerPasswordInput.value;
+                const confirmPassword = confirmPasswordInput.value;
+
+                registerMessageArea.textContent = 'Registering...';
+                registerMessageArea.className = 'message';
+
+                if (password !== confirmPassword) { return; }
+
+                try {
+                    const response = await fetch(`${WORKER_URL}/register`, {
+                        method: 'POST',
+                        headers: { 'Content-Type': 'application/json' },
+                        body: JSON.stringify({ email: email, password: password, farm_name: farmName })
+                    });
+
+                    const data = await response.json();
+
+                    if (response.ok) {
+                        registeredEmail = data.email;
+                        localStorage.setItem('stallMonitorUserEmail', data.email);
+                        localStorage.setItem('stallMonitorFarmName', data.farm_name);
+                        document.getElementById('subscription-modal').style.display = 'flex';
+                    } else {
+                        registerMessageArea.textContent = data.error || 'An unknown error occurred.';
+                        registerMessageArea.className = 'message error';
+                    }
+                } catch (error) {
+                    console.error('Fetch failed:', error);
+                    registerMessageArea.textContent = 'Could not connect to the server.';
+                    registerMessageArea.className = 'message error';
+                }
+            });
+
+            // --- Subscription Modal Logic ---
+            const subscribeForm = document.getElementById('subscribe-form');
+            const subscribeButton = document.getElementById('subscribe-button');
+
+            subscribeForm.addEventListener('submit', async (event) => {
+                event.preventDefault();
+                subscribeButton.textContent = "Redirecting to payment...";
+                subscribeButton.disabled = true;
+
+                const emailToSubscribe = localStorage.getItem('stallMonitorUserEmail');
+                const farmNameToSubscribe = localStorage.getItem('stallMonitorFarmName');
+
+                if (!emailToSubscribe || !farmNameToSubscribe) {
+                    alert('Error: Could not retrieve user details for subscription. Please try registering again.');
+                    subscribeButton.textContent = "Subscribe Now";
+                    subscribeButton.disabled = false;
+                    return;
+                }
+
+                try {
+                    const response = await fetch(`${WORKER_URL}/api/create-checkout-session`, {
+                        method: 'POST',
+                        headers: { 'Content-Type': 'application/json' },
+                        body: JSON.stringify({ email: emailToSubscribe, farm_name: farmNameToSubscribe })
+                    });
+
+                    const data = await response.json();
+
+                    if (response.ok && data.checkoutUrl) {
+                        window.location.href = data.checkoutUrl;
+                    } else {
+                        alert('Error creating payment session: ' + (data.error || 'Unknown error'));
+                        subscribeButton.textContent = "Subscribe Now";
+                        subscribeButton.disabled = false;
+                    }
+                } catch (e) {
+                    console.error("Subscription fetch failed:", e);
+                    alert('Could not connect to the payment server.');
+                    subscribeButton.textContent = "Subscribe Now";
+                    subscribeButton.disabled = false;
+                }
+            });
+        </script>
+
+        <footer class="footer">
+            <div class="footer-content">
+                <div class="footer-text">
+                    <p>&copy; 2025 Stall Monitor. All rights reserved.</p>
+                    <p>All images in this site are real world detections made by Stall Monitor.</p>
+                </div>
+                <nav class="footer-links">
+                    <a href="/index.html">Home</a>
+                    <a href="/cancel.html">Unsubscribe</a>
+                    <a href="/contact.html">Contact</a>
+                </nav>
+            </div>
+        </footer>
+</body>
+
+</html>

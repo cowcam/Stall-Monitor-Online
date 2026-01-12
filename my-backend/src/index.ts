@@ -1,10 +1,19 @@
 import { Hono } from 'hono';
 import Stripe from 'stripe';
 import jwt from '@tsndr/cloudflare-worker-jwt';
+// @ts-ignore
+import manifest from '__STATIC_CONTENT_MANIFEST';
+
+// Fix module declaration for manifest if needed, or ignore
+declare module '__STATIC_CONTENT_MANIFEST' {
+  const content: string;
+  export default content;
+}
 
 export interface Env {
   DB: D1Database;
   TUNNEL_STORE: KVNamespace; // <--- Added for Tunnel Storage
+  __STATIC_CONTENT: KVNamespace;
   STRIPE_API_KEY: string;
   STRIPE_WEBHOOK_SECRET: string;
   RESEND_API_KEY: string;
@@ -32,7 +41,7 @@ async function hashPassword(password: string, salt: Uint8Array): Promise<string>
 }
 
 // --- Initialize Hono ---
-const app = new Hono<{ Bindings: Env }>();
+const app = new Hono<{ Bindings: Env; Variables: { user: any } }>();
 
 // --- Custom CORS Middleware (Unchanged) ---
 app.use('*', async (c, next) => {
@@ -86,7 +95,8 @@ app.post('/register', async (c) => {
 
     const salt = crypto.getRandomValues(new Uint8Array(16));
     const passwordHash = await hashPassword(password, salt);
-    const saltHex = bufferToHex(salt);
+    // Fix: bufferToHex expects ArrayBuffer
+    const saltHex = bufferToHex(salt.buffer);
 
     await c.env.DB.prepare(
       'INSERT INTO users (email, password_hash, salt, farm_name) VALUES (?, ?, ?, ?)'
@@ -385,34 +395,69 @@ app.get('/check-subscription/:identifier', async (c) => {
   }
 });
 
+import { getAssetFromKV } from '@cloudflare/kv-asset-handler';
+// ... previous imports ...
+
 // --- Subdomain Proxy Logic ---
 app.all('*', async (c) => {
   const url = new URL(c.req.url);
-  const hostname = url.hostname; // e.g., "myfarm.stallmonitor.com" or "stallmonitor.com"
-
-  // Extract subdomain
-  // This logic assumes you are using exactly "something.stallmonitor.com" or "something.your-worker.workers.dev"
+  const hostname = url.hostname;
   const parts = hostname.split('.');
 
-  // Basic check: if we have more than 2 parts (e.g. top.domain.com), we might have a subdomain
-  // Adjust logic if you use a 2-part TLD like ".co.uk"
   let subdomain = '';
   if (parts.length > 2) {
-    // If testing on localhost or workers.dev, the logic might differ.
-    // robust way for ".stallmonitor.com":
     if (hostname.endsWith('stallmonitor.com')) {
-      // parts: ["myfarm", "stallmonitor", "com"] -> subdomain "myfarm"
-      // parts: ["www", "stallmonitor", "com"] -> subdomain "www" (ignore?)
       if (parts.length === 3) {
         subdomain = parts[0];
       }
     }
   }
 
-  // If no subdomain or it's 'www' or 'api' or 'my-backend', return 404 or just fall through
-  if (!subdomain || subdomain === 'www' || subdomain === 'api' || subdomain === 'my-backend') {
-    return c.json({ error: 'Not Found' }, 404);
+  // Define reserved subdomains that should HIT THE WORKER directly (APIs, static site)
+  const isReserved = !subdomain || subdomain === 'www' || subdomain === 'api' || subdomain === 'my-backend';
+
+  if (isReserved) {
+    // If it's an API route, let Hono handle it (fall through to next handlers? No, Hono app.all('*') catches everything)
+    // We must check if it matches an API route defined ABOVE.
+    // Hono matches routes in order. Since app.all('*') is defined AFTER the specific routes (e.g. /api/login),
+    // those specific request handlers should have ALREADY fired and returned!
+    // BUT checking the file, app.all('*') is at the END.
+    // So if execution reached here, it means NO API ROUTE MATCHED (404 for API).
+
+    // HOWEVER, for the Root Domain (Landing Page), we want to serve STATIC ASSETS.
+
+    // Try to serve static asset from KV (Cloudflare Sites)
+    try {
+      // We need to pass the execution context
+      const event = c.env.__STATIC_CONTENT ? { request: c.req.raw, waitUntil: (p: any) => c.executionCtx.waitUntil(p) } : undefined;
+      if (!event) {
+        // If we are developing locally without full site setup or running purely as code
+        return c.json({ error: 'Page Not Found' }, 404);
+      }
+
+      // This helper serves index.html for root, etc.
+      return await getAssetFromKV({
+        request: c.req.raw,
+        waitUntil: (p) => c.executionCtx.waitUntil(p)
+      }, {
+        ASSET_NAMESPACE: c.env.__STATIC_CONTENT,
+        ASSET_MANIFEST: JSON.parse(manifest),
+        // Configure default document for root
+        mapRequestToAsset: (req) => {
+          const url = new URL(req.url);
+          if (url.pathname.endsWith('/')) {
+            url.pathname += 'index.html';
+          }
+          return new Request(url.toString(), req);
+        }
+      });
+    } catch (e) {
+      // Asset not found
+      return c.json({ error: 'Page Not Found' }, 404);
+    }
   }
+
+  // --- Subdomain Proxying (for valid farms) ---
 
   // 1. Lookup the tunnel URL
   const tunnelUrl = await c.env.TUNNEL_STORE.get(`tunnel_${subdomain}`);
@@ -423,39 +468,26 @@ app.all('*', async (c) => {
 
   // 2. Proxy the request
   try {
-    // Construct the new URL
-    // existing: https://myfarm.stallmonitor.com/assets/icon.png?foo=bar
-    // target:   https://<tunnel-id>.trycloudflare.com/assets/icon.png?foo=bar
-
-    // tunnelUrl is stored as "https://<tunnel-id>.trycloudflare.com"
     const targetUrl = new URL(tunnelUrl);
     targetUrl.pathname = url.pathname;
     targetUrl.search = url.search;
 
-    // Create a new request to send to the tunnel
     const proxyReq = new Request(targetUrl.toString(), {
       method: c.req.method,
-      headers: c.req.header(), // Pass through original headers
-      body: c.req.raw.body,    // Pass through body (if POST/PUT)
+      headers: c.req.header(),
+      body: c.req.raw.body,
       redirect: 'follow'
     });
 
-    // Important: Cloudflare Tunnels might expect the Host header to match the tunnel domain,
-    // NOT "myfarm.stallmonitor.com".
-    // We overwrite the Host header to match the tunnel's hostname.
     proxyReq.headers.set('Host', targetUrl.hostname);
 
     const response = await fetch(proxyReq);
 
-    // FIX: For WebSockets (status 101), we must return the response directly
-    // Wrapping it in `new Response()` breaks the WebSocket upgrade flow in Workers.
+    // FIX: For WebSockets (status 101), return directly
     if (response.status === 101) {
       return response;
     }
 
-    // Create a new response to return to the user
-    // We need to recreate it to ensure it's mutable if needed, though usually we can just return it.
-    // However, if we need to modify headers (like CORS or Cookies), we do it safely here.
     return new Response(response.body, {
       status: response.status,
       statusText: response.statusText,

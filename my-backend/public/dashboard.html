@@ -1,0 +1,250 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=5.0, user-scalable=yes">
+    <title>Stall Monitor</title>
+    
+    <link rel="manifest" href="/manifest.json">
+    <link rel="icon" href="/assets/stallmonitor.png" type="image/png">
+    <link rel="apple-touch-icon" href="/assets/stallmonitor.png">
+    <meta name="theme-color" content="#242730">
+    <meta name="apple-mobile-web-app-capable" content="yes">
+    <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@400;500;600&display=swap" rel="stylesheet">
+    
+    <style>
+        body, html {
+            margin: 0;
+            padding: 0;
+            height: 100%;
+            width: 100%;
+            background-color: #242730;
+            font-family: 'Poppins', sans-serif;
+            color: rgb(240, 227, 197);
+        }
+
+        #loader-layer {
+            position: absolute;
+            top: 0; left: 0; width: 100%; height: 100%;
+            background-color: #242730;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            z-index: 10;
+            text-align: center;
+        }
+
+        #app-frame {
+            width: 100%;
+            height: 100%;
+            border: none;
+            display: none;
+            background-color: #242730;
+        }
+
+        .loader {
+            border: 4px solid rgba(240, 227, 197, 0.3);
+            border-top: 4px solid rgb(240, 227, 197);
+            border-radius: 50%;
+            width: 40px;
+            height: 40px;
+            animation: spin 1s linear infinite;
+            margin-bottom: 20px;
+        }
+
+        @keyframes spin { 0% { transform: rotate(0deg); } 100% { transform: rotate(360deg); } }
+
+        #retry-btn, #logout-btn {
+            padding: 10px 20px;
+            margin-top: 15px;
+            background-color: #f0e3c5;
+            color: #242730;
+            border: none;
+            border-radius: 5px;
+            font-weight: bold;
+            cursor: pointer;
+            display: none; 
+        }
+        
+        #logout-btn {
+            background-color: #4a4f60;
+            color: #f0e3c5;
+        }
+    </style>
+</head>
+<body>
+
+    <div id="loader-layer">
+        <div class="loader"></div>
+        <h2 id="status-text">Loading...</h2>
+        <p id="sub-text" style="font-size: 0.8em; opacity: 0.7;">Connecting to farm</p>
+        <div style="display: flex; gap: 10px;">
+            <button id="retry-btn" onclick="location.reload()">Retry</button>
+            <button id="logout-btn" onclick="handleLogout()">Log Out</button>
+        </div>
+    </div>
+
+    <iframe id="app-frame" sandbox="allow-forms allow-scripts allow-same-origin allow-popups allow-modals"></iframe>
+
+    <script>
+        // --- HARDCODED VAPID PUBLIC KEY ---
+        const VAPID_PUBLIC_KEY = "BN3jhQwWibJ7M8yzndwuKcIZjXGH4b9cAFnTbRfNL1ZjtWKkI8Pl9X8T0htyPodhKvqcsD-Dy-gySUPZk85ZoDY";
+        
+        let currentTunnelUrl = ""; 
+
+        // --- BRIDGE: Listen for messages from the Python App ---
+        window.addEventListener('message', (event) => {
+            const data = event.data;
+            if (!data) return;
+
+            // 1. Login Token Logic
+            if (data.type === 'SAVE_TOKEN' && data.token) {
+                localStorage.setItem('stallMonitorAppToken', data.token);
+            }
+
+            // 2. Notification Request (User clicked bell in App)
+            if (data.type === 'REQUEST_NOTIFICATIONS') {
+                if (currentTunnelUrl) {
+                    setupNotifications(currentTunnelUrl);
+                }
+            }
+        });
+
+        function handleLogout() {
+            localStorage.removeItem('loggedInUser');
+            localStorage.removeItem('stallMonitorRememberedUser');
+            localStorage.removeItem('stallMonitorAppToken');
+            window.location.href = '/index.html';
+        }
+
+        document.addEventListener('DOMContentLoaded', () => {
+            const params = new URLSearchParams(window.location.search);
+            let farmName = params.get('farm');
+            
+            const statusText = document.getElementById('status-text');
+            const subText = document.getElementById('sub-text');
+            const iframe = document.getElementById('app-frame');
+            const loader = document.getElementById('loader-layer');
+            const retryBtn = document.getElementById('retry-btn');
+            const logoutBtn = document.getElementById('logout-btn');
+
+            // Farm Name Recovery
+            if (!farmName) {
+                try {
+                    const userData = localStorage.getItem('loggedInUser');
+                    if (userData) {
+                        const parsed = JSON.parse(userData);
+                        if (parsed.farmName) farmName = parsed.farmName;
+                    }
+                } catch (e) { console.error(e); }
+            }
+
+            if (!farmName) {
+                window.location.replace('/index.html');
+                return;
+            }
+
+            // Tunnel Loading Logic
+            const loadTunnel = (url) => {
+                currentTunnelUrl = url; 
+                statusText.textContent = "Loading Dashboard...";
+                
+                const savedAppToken = localStorage.getItem('stallMonitorAppToken');
+                if (savedAppToken) {
+                    const separator = url.includes('?') ? '&' : '?';
+                    url = `${url}${separator}authtoken=${savedAppToken}`;
+                }
+
+                iframe.src = url;
+                
+                iframe.onload = () => {
+                    setTimeout(() => {
+                        loader.style.display = 'none';
+                        iframe.style.display = 'block';
+                    }, 500);
+                };
+                
+                setTimeout(() => {
+                    if (loader.style.display !== 'none') {
+                        subText.textContent = "Taking longer than expected...";
+                        retryBtn.style.display = "inline-block";
+                        logoutBtn.style.display = "inline-block";
+                    }
+                }, 8000);
+            };
+
+            statusText.textContent = `Locating ${farmName}...`;
+            
+            fetch(`https://my-backend.stallmonitor.workers.dev/api/get-tunnel?farm=${encodeURIComponent(farmName)}`)
+                .then(res => res.json())
+                .then(data => {
+                    if (data.tunnel_url) {
+                        loadTunnel(data.tunnel_url);
+                    } else {
+                        throw new Error("No tunnel active");
+                    }
+                })
+                .catch(err => {
+                    console.log("Cloud fetch failed, checking local storage:", err);
+                    const localUrl = localStorage.getItem('stallMonitorTunnelUrl');
+                    if (localUrl) {
+                        loadTunnel(localUrl);
+                    } else {
+                        statusText.textContent = "Connection Failed";
+                        subText.textContent = "Is your desktop app running?";
+                        retryBtn.style.display = "inline-block";
+                        logoutBtn.style.display = "inline-block";
+                    }
+                });
+        });
+
+        // --- NOTIFICATION LOGIC ---
+        async function setupNotifications(tunnelFullUrl) {
+            if (!('serviceWorker' in navigator)) return;
+
+            const cleanTunnelUrl = tunnelFullUrl.split('?')[0];
+
+            try {
+                const registration = await navigator.serviceWorker.register('/service-worker.js');
+                console.log("SW Registered");
+
+                // This line triggers the iOS Permission Prompt
+                const subscription = await registration.pushManager.subscribe({
+                    userVisibleOnly: true,
+                    applicationServerKey: urlBase64ToUint8Array(VAPID_PUBLIC_KEY)
+                });
+
+                // Send to Python
+                await fetch(`${cleanTunnelUrl}/save-subscription`, {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify(subscription)
+                });
+                
+                // --- SUCCESS: Tell the Iframe to update the icon ---
+                const iframe = document.getElementById('app-frame');
+                iframe.contentWindow.postMessage({ type: 'NOTIFICATIONS_ENABLED' }, '*');
+
+            } catch (error) {
+                console.error("Notification setup failed:", error);
+                alert("Notification Error: " + error.message);
+            }
+        }
+
+        function urlBase64ToUint8Array(base64String) {
+            const padding = '='.repeat((4 - base64String.length % 4) % 4);
+            const base64 = (base64String + padding).replace(/-/g, '+').replace(/_/g, '/');
+            const rawData = window.atob(base64);
+            const outputArray = new Uint8Array(rawData.length);
+            for (let i = 0; i < rawData.length; ++i) {
+                outputArray[i] = rawData.charCodeAt(i);
+            }
+            return outputArray;
+        }
+    </script>
+</body>
+</html>
