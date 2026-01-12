@@ -40,12 +40,14 @@ app.use('*', async (c, next) => {
   const origin = c.req.header('Origin');
   if (c.req.method === 'OPTIONS') {
     if (origin && allowedOrigins.includes(origin)) {
-      return new Response(null, { status: 204, headers: { /* CORS Headers */
-        'Access-Control-Allow-Origin': origin,
-        'Access-Control-Allow-Methods': 'POST, GET, OPTIONS',
-        'Access-Control-Allow-Headers': 'Content-Type, Authorization',
-        'Access-Control-Max-Age': '86400',
-       }});
+      return new Response(null, {
+        status: 204, headers: { /* CORS Headers */
+          'Access-Control-Allow-Origin': origin,
+          'Access-Control-Allow-Methods': 'POST, GET, OPTIONS',
+          'Access-Control-Allow-Headers': 'Content-Type, Authorization',
+          'Access-Control-Max-Age': '86400',
+        }
+      });
     } else { return new Response('Forbidden - Invalid Origin', { status: 403 }); }
   }
   await next();
@@ -79,7 +81,7 @@ app.post('/register', async (c) => {
       return c.json({ error: 'Email, password, and farm name are required' }, 400);
     }
     if (!/^[a-zA-Z0-9\s-]+$/.test(farm_name) || farm_name.length < 3 || farm_name.length > 50) {
-        return c.json({ error: 'Invalid farm name (3-50 chars, letters, numbers, spaces, hyphens only)' }, 400);
+      return c.json({ error: 'Invalid farm name (3-50 chars, letters, numbers, spaces, hyphens only)' }, 400);
     }
 
     const salt = crypto.getRandomValues(new Uint8Array(16));
@@ -110,7 +112,7 @@ app.post('/login', async (c) => {
     const { identifier, password } = await c.req.json<{ identifier: string; password: string }>();
     console.log(`Login attempt for identifier: ${identifier}`);
     if (!identifier || !password) {
-        return c.json({ error: 'Identifier (email or farm name) and password are required' }, 400);
+      return c.json({ error: 'Identifier (email or farm name) and password are required' }, 400);
     }
 
     const isEmail = identifier.includes('@');
@@ -157,8 +159,8 @@ app.post('/api/create-checkout-session', async (c) => {
     const PRICE_ID = "price_1SG1n3CKer7QDo5DEf04QsgI";
     const YOUR_DOMAIN = 'https://www.stallmonitor.com';
 
-    if (!email || !farm_name) { 
-      return c.json({ error: 'Email and farm name are required' }, 400); 
+    if (!email || !farm_name) {
+      return c.json({ error: 'Email and farm name are required' }, 400);
     }
 
     const farmNameSlug = encodeURIComponent(farm_name);
@@ -268,7 +270,7 @@ app.post('/api/update-tunnel', async (c) => {
     }
 
     console.log(`Updating tunnel for ${farm_name} to ${tunnel_url}`);
-    
+
     // Save to Cloudflare KV
     await c.env.TUNNEL_STORE.put(`tunnel_${farm_name}`, tunnel_url);
 
@@ -330,10 +332,10 @@ app.post('/webhook', async (c) => {
         const customer = await stripe.customers.retrieve(subscription.customer as string) as Stripe.Customer;
         customerEmail = customer.email;
         if (customerEmail) {
-            const newStatus = subscription.cancel_at_period_end ? 'canceling' : subscription.status;
-            await c.env.DB.prepare(
-                'UPDATE users SET stripe_subscription_status = ? WHERE stripe_subscription_id = ?'
-            ).bind(newStatus, subscription.id).run();
+          const newStatus = subscription.cancel_at_period_end ? 'canceling' : subscription.status;
+          await c.env.DB.prepare(
+            'UPDATE users SET stripe_subscription_status = ? WHERE stripe_subscription_id = ?'
+          ).bind(newStatus, subscription.id).run();
         }
         break;
 
@@ -383,9 +385,87 @@ app.get('/check-subscription/:identifier', async (c) => {
   }
 });
 
-// --- Fallback Route (404 Not Found) ---
-app.notFound((c) => {
-  return c.json({ error: 'Not Found' }, 404);
+// --- Subdomain Proxy Logic ---
+app.all('*', async (c) => {
+  const url = new URL(c.req.url);
+  const hostname = url.hostname; // e.g., "myfarm.stallmonitor.com" or "stallmonitor.com"
+
+  // Extract subdomain
+  // This logic assumes you are using exactly "something.stallmonitor.com" or "something.your-worker.workers.dev"
+  const parts = hostname.split('.');
+
+  // Basic check: if we have more than 2 parts (e.g. top.domain.com), we might have a subdomain
+  // Adjust logic if you use a 2-part TLD like ".co.uk"
+  let subdomain = '';
+  if (parts.length > 2) {
+    // If testing on localhost or workers.dev, the logic might differ.
+    // robust way for ".stallmonitor.com":
+    if (hostname.endsWith('stallmonitor.com')) {
+      // parts: ["myfarm", "stallmonitor", "com"] -> subdomain "myfarm"
+      // parts: ["www", "stallmonitor", "com"] -> subdomain "www" (ignore?)
+      if (parts.length === 3) {
+        subdomain = parts[0];
+      }
+    }
+  }
+
+  // If no subdomain or it's 'www' or 'api' or 'my-backend', return 404 or just fall through
+  if (!subdomain || subdomain === 'www' || subdomain === 'api' || subdomain === 'my-backend') {
+    return c.json({ error: 'Not Found' }, 404);
+  }
+
+  // 1. Lookup the tunnel URL
+  const tunnelUrl = await c.env.TUNNEL_STORE.get(`tunnel_${subdomain}`);
+
+  if (!tunnelUrl) {
+    return new Response(`Farm "${subdomain}" not found or offline.`, { status: 404 });
+  }
+
+  // 2. Proxy the request
+  try {
+    // Construct the new URL
+    // existing: https://myfarm.stallmonitor.com/assets/icon.png?foo=bar
+    // target:   https://<tunnel-id>.trycloudflare.com/assets/icon.png?foo=bar
+
+    // tunnelUrl is stored as "https://<tunnel-id>.trycloudflare.com"
+    const targetUrl = new URL(tunnelUrl);
+    targetUrl.pathname = url.pathname;
+    targetUrl.search = url.search;
+
+    // Create a new request to send to the tunnel
+    const proxyReq = new Request(targetUrl.toString(), {
+      method: c.req.method,
+      headers: c.req.header(), // Pass through original headers
+      body: c.req.raw.body,    // Pass through body (if POST/PUT)
+      redirect: 'follow'
+    });
+
+    // Important: Cloudflare Tunnels might expect the Host header to match the tunnel domain,
+    // NOT "myfarm.stallmonitor.com".
+    // We overwrite the Host header to match the tunnel's hostname.
+    proxyReq.headers.set('Host', targetUrl.hostname);
+
+    const response = await fetch(proxyReq);
+
+    // FIX: For WebSockets (status 101), we must return the response directly
+    // Wrapping it in `new Response()` breaks the WebSocket upgrade flow in Workers.
+    if (response.status === 101) {
+      return response;
+    }
+
+    // Create a new response to return to the user
+    // We need to recreate it to ensure it's mutable if needed, though usually we can just return it.
+    // However, if we need to modify headers (like CORS or Cookies), we do it safely here.
+    return new Response(response.body, {
+      status: response.status,
+      statusText: response.statusText,
+      headers: response.headers
+    });
+
+  } catch (e: any) {
+    console.error(`Proxy error for ${subdomain}:`, e);
+    return new Response('Error connecting to farm dashboard.', { status: 502 });
+  }
 });
 
 export default app;

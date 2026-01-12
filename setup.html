@@ -1,5 +1,6 @@
 <!DOCTYPE html>
 <html lang="en">
+
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
@@ -7,6 +8,7 @@
     <link rel="icon" href="/assets/stallmonitor.png" type="image/png">
     <link rel="stylesheet" href="/assets/style.css">
 </head>
+
 <body>
     <header class="header">
         <img src="/assets/stallmonitor.png" alt="Stall Monitor Logo">
@@ -29,7 +31,7 @@
                 <strong>Download the Desktop App:</strong><br>
                 This application runs on your farm's computer to process camera feeds. <br>
                 <a href="#" download="StallMonitorSetup.exe">Download Stall Monitor App (Windows)</a><br>
-                </li>
+            </li>
             <br>
             <li>
                 <strong>Download Detection Models:</strong><br>
@@ -40,7 +42,8 @@
             <br>
             <li>
                 <strong>Install and Configure:</strong><br>
-                Run the downloaded installer and follow the instructions in the app to connect your cameras and load the models.
+                Run the downloaded installer and follow the instructions in the app to connect your cameras and load the
+                models.
             </li>
             <br>
             <li>
@@ -95,8 +98,12 @@
 
             const dashboardLink = document.getElementById('dashboard-link');
 
+            function toSlug(text) {
+                return text.toLowerCase().replace(/[^a-z0-9]/g, '_');
+            }
+
             if (farmName) {
-                dashboardLink.href = `/dashboard.html?farm=${encodeURIComponent(farmName)}`; // Set the correct link
+                dashboardLink.href = `https://${toSlug(farmName)}.stallmonitor.com`;
             } else {
                 // If farm name isn't found, maybe link back home or show an error
                 dashboardLink.textContent = "Go Home (Farm name not found)";
@@ -104,7 +111,7 @@
             }
         });
     </script>
-    
+
     <footer class="footer">
         <div class="footer-content">
             <p>&copy; 2025 Stall Monitor. All rights reserved.</p>
@@ -112,8 +119,9 @@
                 <a href="/index.html">Home</a>
                 <a href="/cancel.html">Unsubscribe</a>
                 <a href="/contact.html">Contact</a>
-                </nav>
+            </nav>
         </div>
     </footer>
 </body>
+
 </html>

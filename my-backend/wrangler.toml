@@ -13,4 +13,8 @@ database_id = "86e92860-08ef-4e6d-9513-e6ed5a9e04b3"
 binding = "TUNNEL_STORE"
 id = "40210a36ce4a4e7a8b662c01d49bbd2f"
 
+[[routes]]
+pattern = "*.stallmonitor.com/*"
+zone_id = "5aeca7f6e29e5f6a4c3f22a45e9fc155"
+
 
