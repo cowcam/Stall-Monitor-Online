@@ -5,19 +5,27 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Stall Monitor</title>
-    <link rel="icon" href="/assets/stallmonitor.png" type="image/png">
+    <link rel="icon" href="/assets/icons/icon.png" type="image/png">
+    <link rel="icon" sizes="32x32" href="/assets/icons/32x32.png" type="image/png">
+    <link rel="icon" sizes="128x128" href="/assets/icons/128x128.png" type="image/png">
+    <link rel="apple-touch-icon" href="/assets/icons/icon.png">
 
     <link rel="preconnect" href="https://fonts.googleapis.com">
-    <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@400;500;600&display=swap" rel="stylesheet">
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
 
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0-beta3/css/all.min.css">
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    <script
+        src="https://cdn.jsdelivr.net/npm/chartjs-plugin-annotation@3.0.1/dist/chartjs-plugin-annotation.min.js"></script>
     <link rel="stylesheet" href="/assets/style.css">
+    <meta name="msapplication-TileColor" content="#242730">
+    <meta name="msapplication-TileImage" content="/assets/icons/Square150x150Logo.png">
 </head>
 
 <body>
 
     <header class="header">
-        <img src="/assets/stallmonitor.png" alt="Stall Monitor Logo">
+        <img src="/assets/icons/icon.png" alt="Stall Monitor Logo">
         <h1>Stall Monitor</h1>
         <div class="user-menu">
             <i class="fas fa-user-circle"></i>
@@ -41,45 +49,67 @@
     </div>
     <div class="main-content">
 
-        <section class="feature-grid">
-            <div class="feature-item">
-                <div class="feature-image">
-                    <img src="/assets/calvingalerts.jpg" alt="Calving Alerts">
+        <!-- Calving Carousel Section -->
+        <div class="carousel-section">
+            <h3 class="carousel-title">Detections</h3>
+            <div class="carousel-wrapper">
+                <button class="carousel-btn calving-btn prev" onclick="scrollCarousel('calving-carousel', -300)">
+                    <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none"
+                        stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                        <polyline points="15 18 9 12 15 6"></polyline>
+                    </svg>
+                </button>
+                <div class="carousel-container" id="calving-carousel">
+                    <!-- Javascript will populate this -->
                 </div>
-                <div class="feature-description">
-                    <h3>Calving Alerts</h3>
-                    <p>Healthy calf, healthy cow, peace of mind. Stall Monitor lets you act at the perfect time.</p>
+                <button class="carousel-btn calving-btn next" onclick="scrollCarousel('calving-carousel', 300)">
+                    <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none"
+                        stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                        <polyline points="9 18 15 12 9 6"></polyline>
+                    </svg>
+                </button>
+                ...
+                <button class="carousel-btn prev" onclick="scrollCarousel('heat-carousel', -300)">
+                    <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none"
+                        stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                        <polyline points="15 18 9 12 15 6"></polyline>
+                    </svg>
+                </button>
+                <div class="carousel-container" id="heat-carousel">
+                    <!-- Javascript will populate this -->
+                </div>
+                <button class="carousel-btn next" onclick="scrollCarousel('heat-carousel', 300)">
+                    <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none"
+                        stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                        <polyline points="9 18 15 12 9 6"></polyline>
+                    </svg>
+                </button>
+            </div>
+        </div>
+
+        <!-- Charts Section -->
+        <div class="charts-section">
+            <div class="charts-grid">
+                <div class="chart-card">
+                    <div class="chart-header">
+                        <h4 class="chart-title">Activity: Heifers (Last 24 Hours)</h4>
+                    </div>
+                    <div class="chart-wrapper">
+                        <canvas id="hourlyChart"></canvas>
+                    </div>
+                </div>
+                <div class="chart-card">
+                    <div class="chart-header">
+                        <h4 class="chart-title">Activity: Heifers (Last 30 Days)</h4>
+                    </div>
+                    <div class="chart-wrapper">
+                        <canvas id="dailyChart"></canvas>
+                    </div>
                 </div>
             </div>
-            <div class="feature-item reverse">
-                <div class="feature-image">
-                    <img src="/assets/heatalerts.jpg" alt="Heat Alerts">
-                </div>
-                <div class="feature-description">
-                    <h3>Heat Alerts</h3>
-                    <p>No neck straps, no bolus, no hassel. Simple, stress-free, and always on watch.</p>
-                </div>
-            </div>
-            <div class="feature-item">
-                <div class="feature-image">
-                    <img src="/assets/activitygraphs2.jpg" alt="Activity Graphs">
-                </div>
-                <div class="feature-description">
-                    <h3>Activity Graphs</h3>
-                    <p>Monitor behavior in real time with hourly and daily activity graphs. More confident timing.</p>
-                </div>
-            </div>
-            <div class="feature-item reverse">
-                <div class="feature-image">
-                    <img src="/assets/2imagequality.JPG" alt="Image Quality">
-                </div>
-                <div class="feature-description">
-                    <h3>Image Quality</h3>
-                    <p>No light? No problem. Stall Monitor can detect a heat even with poor lighting, obstructed view or
-                        poor visibility.</p>
-                </div>
-            </div>
-        </section>
+        </div>
+
+
 
         <div id="auth-modal" class="modal-overlay">
             <div class="modal-container">
@@ -107,7 +137,7 @@
                                 <input type="checkbox" id="remember-me">
                                 <label for="remember-me">Remember Me</label>
                             </div>
-                            <button type="submit">Log In</button>
+                            <button type="submit" class="cta-button" style="width: 100%;">Log In</button>
                             <p id="login-message" class="message"></p>
                         </form>
                     </div>
@@ -135,7 +165,7 @@
                                 <input type="checkbox" id="show-password" style="width: auto;">
                                 <label for="show-password">Show Password</label>
                             </div>
-                            <button type="submit">Register</button>
+                            <button type="submit" class="cta-button" style="width: 100%;">Register</button>
                             <p id="register-message" class="message"></p>
                         </form>
                     </div>
@@ -147,7 +177,8 @@
                 <h2>Almost there!</h2>
                 <p>Your account has been created. Click below to activate your Stall Monitor Pro subscription.</p>
                 <form id="subscribe-form">
-                    <button type="submit" id="subscribe-button">Subscribe Now</button>
+                    <button type="submit" id="subscribe-button" class="cta-button" style="width: 100%;">Subscribe
+                        Now</button>
                 </form>
             </div>
         </div>
@@ -412,6 +443,235 @@
                     subscribeButton.disabled = false;
                 }
             });
+
+            // --- Dashboard Visuals Logic ---
+
+            const detectionImages = [
+                // Calving
+                { src: '/assets/calving detections/20260109_105438_North_027c2a3ecd2227b9.jpg', type: 'Calving' },
+                { src: '/assets/calving detections/20251227_063328_Close_Up_da931590fa1142f5.jpg', type: 'Calving' },
+                { src: '/assets/calving detections/20251227_062958_North_2e7b6444f8ef6a23.jpg', type: 'Calving' },
+                { src: '/assets/calving detections/20251129_043439_Close_Up_4d58ad0dcb3caa9e.jpg', type: 'Calving' },
+                { src: '/assets/calving detections/20251129_041342_Close_Up_ec648acafeeaf922.jpg', type: 'Calving' },
+                { src: '/assets/calving detections/20251121_141856_Close_Up_f625be2cca8740ce.jpg', type: 'Calving' },
+                { src: '/assets/calving detections/20251117_174255_North_5aa53dee175cb950.jpg', type: 'Calving' },
+                { src: '/assets/calving detections/20251117_173841_North_8b8f662f78e7f975.jpg', type: 'Calving' },
+                { src: '/assets/calving detections/20251029_224728_CU3_ba04ee220e78276c.jpg', type: 'Calving' },
+                { src: '/assets/calving detections/20251029_224712_Close_Up_0c2a84e2595eed43.jpg', type: 'Calving' },
+                { src: '/assets/calving detections/20251029_223048_Close_Up_ab200498dda6766b.jpg', type: 'Calving' },
+                { src: '/assets/calving detections/alert_20251025_030108.jpg', type: 'Calving' },
+
+                // Heat
+                { src: '/assets/heat detections/20260213_165315_Heat_detect_Dairy-Group_MW_qxGBTg.jpg', type: 'Heat' },
+                { src: '/assets/heat detections/20260212_125538_TestHeat_detect_Heifers_SE_1KACTA.jpg', type: 'Heat' },
+                { src: '/assets/heat detections/20260212_023717_Heat_detect_Dairy-Group_MW_RdP4tR.jpg', type: 'Heat' },
+                { src: '/assets/heat detections/20260212_021537_Heat_detect_Dairy-Group_NE_7Abzv2.jpg', type: 'Heat' },
+                { src: '/assets/heat detections/20260212_005211_Heat_detect_Dairy-Group_MW_v8jBek.jpg', type: 'Heat' },
+                { src: '/assets/heat detections/20260211_161014_Heat_detect_Dairy-Group_MW_MepxaT.jpg', type: 'Heat' },
+                { src: '/assets/heat detections/20260210_215739_Heat_detect_Dairy-Group_MW_dsGLeP.jpg', type: 'Heat' },
+                { src: '/assets/heat detections/20260208_040541_Heat_detect_Dairy-Group_MW_MVpXml.jpg', type: 'Heat' },
+                { src: '/assets/heat detections/20260208_040048_Heat_detect_Dairy-Group_MW_MO4OPN.jpg', type: 'Heat' },
+                { src: '/assets/heat detections/20260208_040046_Heat_detect_Dairy-Group_ME_NpO7qG.jpg', type: 'Heat' },
+                { src: '/assets/heat detections/20260208_004459_Heat_detect_Dairy-Group_NW_UPu6NW.jpg', type: 'Heat' },
+                { src: '/assets/heat detections/20260205_153819_Heat_detect_Heifers_SE_luJHfL.jpg', type: 'Heat' }
+            ];
+
+            function parseMeta(src, type) {
+                // filename is the last part
+                const filename = src.split('/').pop();
+                // format: YYYYMMDD_HHMMSS_...
+                const parts = filename.split('_');
+                if (parts.length >= 2 && parts[0].length === 8) {
+                    const dStr = parts[0]; // YYYYMMDD
+                    const tStr = parts[1]; // HHMMSS
+
+                    const m = dStr.substring(4, 6);
+                    const d = dStr.substring(6, 8);
+                    const h = tStr.substring(0, 2);
+                    const min = tStr.substring(2, 4);
+
+                    // Simple logic to extract pen name or just return type
+                    // Filename structure varies slightly
+                    let pen = type;
+                    // Heuristic: finding parts that are not numbers
+                    // ...
+
+                    return `${m}/${d} ${h}:${min}`;
+                }
+                return type;
+            }
+
+            function initCarousel() {
+                const calvingContainer = document.getElementById('calving-carousel');
+                const heatContainer = document.getElementById('heat-carousel');
+
+                if (!calvingContainer || !heatContainer) return;
+
+                detectionImages.forEach(img => {
+                    const item = document.createElement('div');
+                    item.className = 'carousel-item';
+
+                    const meta = parseMeta(img.src, img.type);
+
+                    item.innerHTML = `
+                        <div class="carousel-image-wrapper">
+                            <img src="${img.src}" alt="${img.type} Detection" loading="lazy">
+                        </div>
+                        <div class="carousel-info">
+                            <h4>${img.type}</h4>
+                            <p>${meta}</p>
+                        </div>
+                    `;
+
+                    if (img.type === 'Calving') {
+                        calvingContainer.appendChild(item);
+                    } else if (img.type === 'Heat') {
+                        heatContainer.appendChild(item);
+                    }
+                });
+            }
+
+            function initCharts() {
+                // Hourly Chart
+                const hourlyCtx = document.getElementById('hourlyChart');
+                if (hourlyCtx) {
+                    const hourlyLabels = [...Array(24).keys()].map(i => i + 'h');
+                    // Fake data distribution
+                    // Fake data distribution - Single Peak around midday
+                    const hourlyData = [1, 0, 0, 0, 1, 2, 4, 6, 9, 12, 16, 19, 18, 15, 12, 9, 6, 4, 3, 2, 1, 1, 0, 0];
+
+                    new Chart(hourlyCtx, {
+                        type: 'bar',
+                        data: {
+                            labels: hourlyLabels,
+                            datasets: [{
+                                label: 'Activity',
+                                data: hourlyData,
+                                backgroundColor: '#3B82F6',
+                                borderRadius: 4,
+                                barPercentage: 0.7
+                            }]
+                        },
+                        options: {
+                            responsive: true,
+                            maintainAspectRatio: false,
+                            plugins: {
+                                legend: { display: false },
+                                annotation: {
+                                    annotations: {
+                                        optimalWindowHighlight: {
+                                            type: 'box',
+                                            xMin: 7,
+                                            xMax: 15,
+                                            backgroundColor: 'rgba(59, 130, 246, 0.15)',
+                                            borderColor: 'rgba(59, 130, 246, 0.3)',
+                                            borderWidth: 1,
+                                            borderDash: [3, 3],
+                                            drawTime: 'beforeDatasetsDraw'
+                                        },
+                                        optimalWindowBadge: {
+                                            type: 'label',
+                                            xValue: 11,
+                                            yValue: (ctx) => ctx.chart.scales.y.max,
+                                            yAdjust: 40,
+                                            backgroundColor: 'rgba(147, 197, 253, 0.8)',
+                                            content: ['Optimal', 'Service', 'Window'],
+                                            color: '#111827',
+                                            font: { size: 10, weight: 'bold' },
+                                            padding: 10,
+                                            borderRadius: 6,
+                                            drawTime: 'afterDraw'
+                                        }
+                                    }
+                                }
+                            },
+                            scales: {
+                                y: { display: false, beginAtZero: true },
+                                x: { grid: { display: false }, ticks: { font: { size: 10 } } }
+                            }
+                        }
+                    });
+                }
+
+                // Daily Chart
+                const dailyCtx = document.getElementById('dailyChart');
+                if (dailyCtx) {
+                    const days = [];
+                    const activity = [];
+                    for (let i = 30; i > 0; i--) {
+                        const d = new Date();
+                        d.setDate(d.getDate() - i);
+                        days.push(`${d.getMonth() + 1}/${d.getDate()}`);
+                        // Random realistic data
+                        activity.push(Math.floor(Math.random() * 100) + 50);
+                    }
+
+                    new Chart(dailyCtx, {
+                        type: 'bar',
+                        data: {
+                            labels: days,
+                            datasets: [{
+                                label: 'Daily Activity',
+                                data: activity,
+                                backgroundColor: '#3B82F6',
+                                borderRadius: 4,
+                                barPercentage: 0.6
+                            }]
+                        },
+                        options: {
+                            responsive: true,
+                            maintainAspectRatio: false,
+                            plugins: {
+                                legend: { display: false },
+                                annotation: {
+                                    annotations: {
+                                        cycleWatchHighlight: {
+                                            type: 'box',
+                                            xMin: 6,
+                                            xMax: 10,
+                                            backgroundColor: 'rgba(59, 130, 246, 0.15)',
+                                            borderColor: 'rgba(59, 130, 246, 0.3)',
+                                            borderWidth: 1,
+                                            borderDash: [3, 3],
+                                            drawTime: 'beforeDatasetsDraw'
+                                        },
+                                        cycleWatchBadge: {
+                                            type: 'label',
+                                            xValue: 8,
+                                            yValue: (ctx) => ctx.chart.scales.y.max,
+                                            yAdjust: 40,
+                                            backgroundColor: 'rgba(147, 197, 253, 0.8)',
+                                            content: ['21 Day', 'Cycle', 'Watch'],
+                                            color: '#111827',
+                                            font: { size: 10, weight: 'bold' },
+                                            padding: 10,
+                                            borderRadius: 6,
+                                            drawTime: 'afterDraw'
+                                        }
+                                    }
+                                }
+                            },
+                            scales: {
+                                y: { display: false, beginAtZero: true },
+                                x: { grid: { display: false }, ticks: { font: { size: 10 } } }
+                            }
+                        }
+                    });
+                }
+            }
+
+            function scrollCarousel(id, offset) {
+                const container = document.getElementById(id);
+                if (container) {
+                    container.scrollBy({ left: offset, behavior: 'smooth' });
+                }
+            }
+
+            // Init
+            window.addEventListener('load', () => {
+                initCarousel();
+                initCharts();
+            });
         </script>
 
         <footer class="footer">
@@ -424,6 +684,10 @@
                     <a href="/index.html">Home</a>
                     <a href="/cancel.html">Unsubscribe</a>
                     <a href="/contact.html">Contact</a>
+                    <a href="https://www.facebook.com/profile.php?id=61579300736729" target="_blank"
+                        rel="noopener noreferrer"><i class="fab fa-facebook"></i></a>
+                    <a href="https://www.youtube.com/@VibeFarmer" target="_blank" rel="noopener noreferrer"><i
+                            class="fab fa-youtube"></i></a>
                 </nav>
             </div>
         </footer>

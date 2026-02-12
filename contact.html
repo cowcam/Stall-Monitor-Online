@@ -1,21 +1,25 @@
 <!DOCTYPE html>
 <html lang="en">
+
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Contact Us - Stall Monitor</title>
-    <link rel="icon" href="/assets/stallmonitor.png" type="image/png">
-    
+    <link rel="icon" sizes="128x128" href="/assets/icons/128x128.png" type="image/png">
+    <link rel="apple-touch-icon" href="/assets/icons/icon.png">
+    <meta name="msapplication-TileColor" content="#242730">
+    <meta name="msapplication-TileImage" content="/assets/icons/Square150x150Logo.png">
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@400;500;600&display=swap" rel="stylesheet">
-    
+
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0-beta3/css/all.min.css">
-    
+
     <link rel="stylesheet" href="/assets/style.css">
 </head>
+
 <body class="contact-page">
     <header class="header">
-        <img src="/assets/stallmonitor.png" alt="Stall Monitor Logo">
+        <img src="/assets/icons/icon.png" alt="Stall Monitor Logo">
         <h1>Stall Monitor</h1>
         <div class="user-menu">
             <i class="fas fa-user-circle"></i>
@@ -36,7 +40,8 @@
     <div class="main-content">
         <div class="form-container">
             <h2>Contact Us</h2>
-            <p>Have a question or need support? Fill out the form below and we'll get back to you as soon as possible.</p>
+            <p>Have a question or need support? Fill out the form below and we'll get back to you as soon as possible.
+            </p>
             <form id="contact-form">
                 <div class="form-group">
                     <label for="contact-name">Your Name</label>
@@ -50,7 +55,7 @@
                     <label for="contact-message">Message</label>
                     <textarea id="contact-message" rows="5" required></textarea>
                 </div>
-                <button type="submit">Send Message</button>
+                <button type="submit" class="cta-button" style="width: 100%; margin-top: 10px;">Send Message</button>
                 <p id="contact-form-message" class="message"></p>
             </form>
         </div>
@@ -107,7 +112,7 @@
             }
         });
     </script>
-    
+
     <footer class="footer">
         <div class="footer-content">
             <div class="footer-text">
@@ -118,8 +123,13 @@
                 <a href="/index.html">Home</a>
                 <a href="/cancel.html">Unsubscribe</a>
                 <a href="/contact.html">Contact</a>
+                <a href="https://www.facebook.com/profile.php?id=61579300736729" target="_blank"
+                    rel="noopener noreferrer"><i class="fab fa-facebook"></i></a>
+                <a href="https://www.youtube.com/@VibeFarmer" target="_blank" rel="noopener noreferrer"><i
+                        class="fab fa-youtube"></i></a>
             </nav>
         </div>
     </footer>
 </body>
+
 </html>
