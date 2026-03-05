@@ -63,7 +63,21 @@ app.use('*', async (c, next) => {
     } else { return new Response('Forbidden - Invalid Origin', { status: 403 }); }
   }
   await next();
-  if (origin && isAllowed && c.res) { c.res.headers.set('Access-Control-Allow-Origin', origin); }
+
+  if (origin && isAllowed && c.res) {
+    // WebSockets (101) do not need CORS and mutating them breaks the tunnel
+    if (c.res.status === 101) return;
+
+    try {
+      c.res.headers.set('Access-Control-Allow-Origin', origin);
+    } catch (e) {
+      // If the response is from a fetched proxy, it might be immutable.
+      // E.g. Cloudflare Worker `fetch()` responses. Cloning fixes it.
+      const newResponse = new Response(c.res.body, c.res);
+      newResponse.headers.set('Access-Control-Allow-Origin', origin);
+      c.res = newResponse;
+    }
+  }
 });
 
 // --- JWT Verification Middleware ---
@@ -479,16 +493,9 @@ app.all('*', async (c) => {
 
     const response = await fetch(proxyReq);
 
-    // FIX: For WebSockets (status 101), return directly
-    if (response.status === 101) {
-      return response;
-    }
-
-    return new Response(response.body, {
-      status: response.status,
-      statusText: response.statusText,
-      headers: response.headers
-    });
+    // Cloudflare Workers automatically handles WebSocket upgrades and streaming
+    // if you return the fetch response directly.
+    return response;
 
   } catch (e: any) {
     console.error(`Proxy error for ${subdomain}:`, e);
