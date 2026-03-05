@@ -1,18 +1,20 @@
 <!DOCTYPE html>
 <html lang="en">
+
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Contact Us - Stall Monitor</title>
     <link rel="icon" href="/assets/stallmonitor.png" type="image/png">
-    
+
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@400;500;600&display=swap" rel="stylesheet">
-    
+
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0-beta3/css/all.min.css">
-    
+
     <link rel="stylesheet" href="/assets/style.css">
 </head>
+
 <body class="contact-page">
     <header class="header">
         <img src="/assets/stallmonitor.png" alt="Stall Monitor Logo">
@@ -36,7 +38,8 @@
     <div class="main-content">
         <div class="form-container">
             <h2>Contact Us</h2>
-            <p>Have a question or need support? Fill out the form below and we'll get back to you as soon as possible.</p>
+            <p>Have a question or need support? Fill out the form below and we'll get back to you as soon as possible.
+            </p>
             <form id="contact-form">
                 <div class="form-group">
                     <label for="contact-name">Your Name</label>
@@ -57,7 +60,7 @@
     </div>
 
     <script>
-        const WORKER_URL = 'https://my-backend.stallmonitor.workers.dev';
+        const WORKER_URL = 'https://api.stallmonitor.com';
         const contactForm = document.getElementById('contact-form');
         const messageArea = document.getElementById('contact-form-message');
         const userMenu = document.querySelector('.user-menu');
@@ -107,7 +110,7 @@
             }
         });
     </script>
-    
+
     <footer class="footer">
         <div class="footer-content">
             <div class="footer-text">
@@ -122,4 +125,5 @@
         </div>
     </footer>
 </body>
+
 </html>

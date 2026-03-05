@@ -475,14 +475,7 @@ app.all('*', async (c) => {
     targetUrl.pathname = url.pathname;
     targetUrl.search = url.search;
 
-    const proxyReq = new Request(targetUrl.toString(), {
-      method: c.req.method,
-      headers: c.req.header(),
-      body: c.req.raw.body,
-      redirect: 'follow'
-    });
-
-    proxyReq.headers.set('Host', targetUrl.hostname);
+    const proxyReq = new Request(targetUrl.toString(), c.req.raw);
 
     const response = await fetch(proxyReq);
 
