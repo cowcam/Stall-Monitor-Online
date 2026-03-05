@@ -1,10 +1,11 @@
 <!DOCTYPE html>
 <html lang="en">
+
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=5.0, user-scalable=yes">
     <title>Stall Monitor</title>
-    
+
     <link rel="manifest" href="/manifest.json">
     <link rel="icon" href="/assets/stallmonitor.png" type="image/png">
     <link rel="apple-touch-icon" href="/assets/stallmonitor.png">
@@ -14,9 +15,10 @@
 
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@400;500;600&display=swap" rel="stylesheet">
-    
+
     <style>
-        body, html {
+        body,
+        html {
             margin: 0;
             padding: 0;
             height: 100%;
@@ -28,7 +30,10 @@
 
         #loader-layer {
             position: absolute;
-            top: 0; left: 0; width: 100%; height: 100%;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
             background-color: #242730;
             display: flex;
             flex-direction: column;
@@ -56,9 +61,18 @@
             margin-bottom: 20px;
         }
 
-        @keyframes spin { 0% { transform: rotate(0deg); } 100% { transform: rotate(360deg); } }
+        @keyframes spin {
+            0% {
+                transform: rotate(0deg);
+            }
 
-        #retry-btn, #logout-btn {
+            100% {
+                transform: rotate(360deg);
+            }
+        }
+
+        #retry-btn,
+        #logout-btn {
             padding: 10px 20px;
             margin-top: 15px;
             background-color: #f0e3c5;
@@ -67,15 +81,16 @@
             border-radius: 5px;
             font-weight: bold;
             cursor: pointer;
-            display: none; 
+            display: none;
         }
-        
+
         #logout-btn {
             background-color: #4a4f60;
             color: #f0e3c5;
         }
     </style>
 </head>
+
 <body>
 
     <div id="loader-layer">
@@ -93,8 +108,8 @@
     <script>
         // --- HARDCODED VAPID PUBLIC KEY ---
         const VAPID_PUBLIC_KEY = "BN3jhQwWibJ7M8yzndwuKcIZjXGH4b9cAFnTbRfNL1ZjtWKkI8Pl9X8T0htyPodhKvqcsD-Dy-gySUPZk85ZoDY";
-        
-        let currentTunnelUrl = ""; 
+
+        let currentTunnelUrl = "";
 
         // --- BRIDGE: Listen for messages from the Python App ---
         window.addEventListener('message', (event) => {
@@ -124,7 +139,7 @@
         document.addEventListener('DOMContentLoaded', () => {
             const params = new URLSearchParams(window.location.search);
             let farmName = params.get('farm');
-            
+
             const statusText = document.getElementById('status-text');
             const subText = document.getElementById('sub-text');
             const iframe = document.getElementById('app-frame');
@@ -150,9 +165,9 @@
 
             // Tunnel Loading Logic
             const loadTunnel = (url) => {
-                currentTunnelUrl = url; 
+                currentTunnelUrl = url;
                 statusText.textContent = "Loading Dashboard...";
-                
+
                 const savedAppToken = localStorage.getItem('stallMonitorAppToken');
                 if (savedAppToken) {
                     const separator = url.includes('?') ? '&' : '?';
@@ -160,14 +175,14 @@
                 }
 
                 iframe.src = url;
-                
+
                 iframe.onload = () => {
                     setTimeout(() => {
                         loader.style.display = 'none';
                         iframe.style.display = 'block';
                     }, 500);
                 };
-                
+
                 setTimeout(() => {
                     if (loader.style.display !== 'none') {
                         subText.textContent = "Taking longer than expected...";
@@ -178,8 +193,8 @@
             };
 
             statusText.textContent = `Locating ${farmName}...`;
-            
-            fetch(`https://my-backend.stallmonitor.workers.dev/api/get-tunnel?farm=${encodeURIComponent(farmName)}`)
+
+            fetch(`https://api.stallmonitor.com/api/get-tunnel?farm=${encodeURIComponent(farmName)}`)
                 .then(res => res.json())
                 .then(data => {
                     if (data.tunnel_url) {
@@ -224,7 +239,7 @@
                     headers: { 'Content-Type': 'application/json' },
                     body: JSON.stringify(subscription)
                 });
-                
+
                 // --- SUCCESS: Tell the Iframe to update the icon ---
                 const iframe = document.getElementById('app-frame');
                 iframe.contentWindow.postMessage({ type: 'NOTIFICATIONS_ENABLED' }, '*');
@@ -247,4 +262,5 @@
         }
     </script>
 </body>
+
 </html>
