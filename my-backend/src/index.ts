@@ -43,14 +43,17 @@ async function hashPassword(password: string, salt: Uint8Array): Promise<string>
 // --- Initialize Hono ---
 const app = new Hono<{ Bindings: Env; Variables: { user: any } }>();
 
-// --- Custom CORS Middleware (Unchanged) ---
+// --- Custom CORS Middleware ---
 app.use('*', async (c, next) => {
-  const allowedOrigins = ['https://www.stallmonitor.com', 'https://stallmonitor.com', 'null', '*'];
+  const allowedOrigins = ['https://www.stallmonitor.com', 'https://stallmonitor.com', '*'];
   const origin = c.req.header('Origin');
+
+  const isAllowed = origin && (allowedOrigins.includes(origin) || allowedOrigins.includes('*'));
+
   if (c.req.method === 'OPTIONS') {
-    if (origin && allowedOrigins.includes(origin)) {
+    if (origin && isAllowed) {
       return new Response(null, {
-        status: 204, headers: { /* CORS Headers */
+        status: 204, headers: {
           'Access-Control-Allow-Origin': origin,
           'Access-Control-Allow-Methods': 'POST, GET, OPTIONS',
           'Access-Control-Allow-Headers': 'Content-Type, Authorization',
@@ -60,7 +63,7 @@ app.use('*', async (c, next) => {
     } else { return new Response('Forbidden - Invalid Origin', { status: 403 }); }
   }
   await next();
-  if (origin && allowedOrigins.includes(origin) && c.res) { c.res.headers.set('Access-Control-Allow-Origin', origin); }
+  if (origin && isAllowed && c.res) { c.res.headers.set('Access-Control-Allow-Origin', origin); }
 });
 
 // --- JWT Verification Middleware ---
