@@ -256,12 +256,14 @@ app.post('/api/contact', async (c) => {
       return c.json({ error: 'Name, email, and message are required' }, 400);
     }
 
-    const SENDER_EMAIL = 'contact@stallmonitor.com';
+    const SENDER_EMAIL = 'info@stallmonitor.com';
+    const DESTINATION_EMAIL = 'stallmonitorinfo@gmail.com';
     const RESEND_API_KEY = c.env.RESEND_API_KEY;
 
     const mailPayload = {
       from: `Stall Monitor Contact Form <${SENDER_EMAIL}>`,
-      to: SENDER_EMAIL,
+      to: DESTINATION_EMAIL,
+      reply_to: email, // Routes replies directly to the client's submitted email address
       subject: `New Contact Form Submission from ${name}`,
       text: `Name: ${name}\nEmail: ${email}\nMessage: ${message}`,
     };
