@@ -4,11 +4,7 @@ import jwt from '@tsndr/cloudflare-worker-jwt';
 // @ts-ignore
 import manifest from '__STATIC_CONTENT_MANIFEST';
 
-// Fix module declaration for manifest if needed, or ignore
-declare module '__STATIC_CONTENT_MANIFEST' {
-  const content: string;
-  export default content;
-}
+
 
 export interface Env {
   DB: D1Database;
@@ -298,10 +294,13 @@ app.post('/api/update-tunnel', async (c) => {
       return c.json({ error: 'farm_name and tunnel_url are required' }, 400);
     }
 
-    console.log(`Updating tunnel for ${farm_name} to ${tunnel_url}`);
+    // Normalize farm name to match subdomain format (lowercase, underscores)
+    const farm_slug = farm_name.toLowerCase().replace(/[^a-z0-9]/g, '_');
+
+    console.log(`Updating tunnel for ${farm_name} (${farm_slug}) to ${tunnel_url}`);
 
     // Save to Cloudflare KV
-    await c.env.TUNNEL_STORE.put(`tunnel_${farm_name}`, tunnel_url);
+    await c.env.TUNNEL_STORE.put(`tunnel_${farm_slug}`, tunnel_url);
 
     return c.json({ status: 'saved', url: tunnel_url });
   } catch (e: any) {
@@ -319,8 +318,10 @@ app.get('/api/get-tunnel', async (c) => {
       return c.json({ error: 'farm query param is required' }, 400);
     }
 
+    const farm_slug = farm_name.toLowerCase().replace(/[^a-z0-9]/g, '_');
+
     // Read from Cloudflare KV
-    const tunnel_url = await c.env.TUNNEL_STORE.get(`tunnel_${farm_name}`);
+    const tunnel_url = await c.env.TUNNEL_STORE.get(`tunnel_${farm_slug}`);
 
     return c.json({ tunnel_url: tunnel_url || null });
   } catch (e: any) {
